@@ -1,0 +1,2823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Manual Maestro de Usos Avanzados de Gemini Notebook — V001</title>
+  <style>
+    :root {
+      --bg-main: #0a0e1a;
+      --bg-card: #0f172a;
+      --bg-elevated: #1e293b;
+      --accent-blue: #1e3a5f;
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --accent-cyan: #38bdf8;
+      --accent-bright: #00d4ff;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --border-color: #1e3a5f;
+      --font-scale: 1;
+      --nav-height: 58px;
+    }
+
+    body.light-theme {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-elevated: #f1f5f9;
+      --accent-blue: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --accent-cyan: #0284c7;
+      --accent-bright: #0369a1;
+      --border-color: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      font-size: calc(16px * var(--font-scale));
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      line-height: 1.65;
+      overflow-x: hidden;
+      padding-top: calc(var(--nav-height) + 4px);
+      padding-bottom: 90px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* BARRA DE PROGRESO DE LECTURA */
+    #reading-progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(30, 58, 95, 0.4);
+      z-index: 40;
+    }
+
+    #reading-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), var(--accent-emerald));
+      transition: width 0.15s ease-out;
+    }
+
+    /* NAVEGACIÓN PRINCIPAL FIJA */
+    nav#main-nav {
+      position: fixed;
+      top: 4px;
+      left: 0;
+      right: 0;
+      height: var(--nav-height);
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      overflow-x: auto;
+      white-space: nowrap;
+      z-index: 30;
+      scrollbar-width: none;
+    }
+
+    body.light-theme nav#main-nav {
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    nav#main-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+
+    .chip:hover, .chip:focus-visible {
+      border-color: var(--accent-cyan);
+      outline: 2px solid var(--accent-cyan);
+      outline-offset: 2px;
+    }
+
+    .chip.active {
+      background: var(--accent-cyan);
+      color: #0a0e1a;
+      border-color: var(--accent-cyan);
+      font-weight: 700;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+    }
+
+    #mb {
+      background: linear-gradient(135deg, #1e3a5f, #0f172a);
+      color: #38bdf8;
+      border: 1px solid #38bdf8;
+      font-weight: 700;
+    }
+
+    /* PANEL LATERAL ÍNDICE (SEGÚN ESPECIFICACIÓN EXACTA) */
+    #dr {
+      position: fixed;
+      top: 58px;
+      left: 0;
+      bottom: 0;
+      width: min(330px, 88vw);
+      background: #0f172a;
+      border-right: 1px solid #1e3a5f;
+      transform: translateX(-105%);
+      transition: .25s;
+      z-index: 25;
+      overflow: auto;
+      padding: 10px;
+      box-shadow: 8px 0 30px rgba(0, 0, 0, 0.6);
+    }
+
+    #dr.o {
+      transform: none;
+    }
+
+    #dr a {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-radius: 8px;
+      color: #e2e8f0;
+      cursor: pointer;
+      min-height: 44px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      text-decoration: none;
+      margin-bottom: 4px;
+      border: 1px solid transparent;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    #dr a:hover, #dr a:focus-visible {
+      background: #ffffff0d;
+      outline: 2px solid #00d4ff;
+    }
+
+    #dr a.on {
+      background: #00d4ff22;
+      color: #00d4ff;
+      border-color: rgba(0, 212, 255, 0.35);
+      font-weight: 700;
+    }
+
+    /* BARRA DE UTILIDADES Y BUSCADOR */
+    .utility-bar {
+      max-width: 1080px;
+      margin: 12px auto 0;
+      padding: 0 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-wrapper {
+      flex: 1 1 220px;
+      display: flex;
+      gap: 6px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 42px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    .search-input:focus {
+      outline: 2px solid var(--accent-cyan);
+      border-color: transparent;
+    }
+
+    .tools-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      min-height: 42px;
+      min-width: 42px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .tool-btn:hover, .tool-btn:focus-visible {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    #search-results-panel {
+      max-width: 1080px;
+      margin: 8px auto;
+      padding: 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--accent-cyan);
+      border-radius: 12px;
+      display: none;
+    }
+
+    .search-hit {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .search-hit:hover {
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    /* CONTENEDOR PRINCIPAL Y SECCIONES */
+    main {
+      max-width: 1080px;
+      margin: 12px auto;
+      padding: 0 12px;
+    }
+
+    .tab-sec {
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .tab-sec.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* TIPOGRAFÍA Y TARJETAS */
+    h1 {
+      font-size: clamp(1.45rem, 4.5vw, 2.3rem);
+      line-height: 1.25;
+      margin-bottom: 14px;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .by-author-inline {
+      color: var(--accent-cyan);
+      font-weight: 800;
+      display: inline-block;
+    }
+
+    h2 {
+      font-size: clamp(1.3rem, 3.8vw, 1.85rem);
+      color: var(--accent-cyan);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    h3 {
+      font-size: clamp(1.1rem, 3vw, 1.38rem);
+      color: var(--text-primary);
+      margin: 22px 0 10px;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      color: var(--accent-amber);
+      margin: 16px 0 8px;
+    }
+
+    p {
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    ul, ol {
+      margin: 0 0 16px 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-highlight {
+      border-left: 4px solid var(--accent-cyan);
+    }
+
+    .card-warn {
+      border-left: 4px solid var(--accent-amber);
+      background: rgba(245, 158, 11, 0.06);
+    }
+
+    .card-success {
+      border-left: 4px solid var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.06);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .badge-cyan { background: rgba(56, 189, 248, 0.18); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.4); }
+    .badge-amber { background: rgba(245, 158, 11, 0.18); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); }
+    .badge-emerald { background: rgba(16, 185, 129, 0.18); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-purple { background: rgba(168, 85, 247, 0.18); color: var(--accent-purple); border: 1px solid rgba(168, 85, 247, 0.4); }
+
+    /* PEDAGOGÍA GAUNTLET: CAJAS ESTRUCTURALES */
+    .pedagogy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+
+    .pedagogy-item {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .pedagogy-item strong {
+      display: block;
+      color: var(--accent-cyan);
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+
+    /* PASOS NUMERADOS ATÓMICOS */
+    .step-list {
+      list-style: none;
+      margin-left: 0;
+    }
+
+    .step-item {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .step-num {
+      background: var(--accent-cyan);
+      color: #0a0e1a;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .step-meta {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      border-top: 1px dashed var(--border-color);
+      padding-top: 6px;
+      margin-top: 4px;
+    }
+
+    /* CONTENEDORES SVG HERO Y CRÉDITOS (4:5 VERTICAL) */
+    .svg-hero-wrapper {
+      width: 100%;
+      max-width: 440px;
+      aspect-ratio: 4 / 5;
+      margin: 0 auto 20px;
+      background: radial-gradient(circle at 50% 40%, #162647 0%, #090d16 100%);
+      border: 2px solid var(--accent-cyan);
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 12px 35px rgba(0, 212, 255, 0.22);
+    }
+
+    .svg-hero-wrapper svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .svg-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    /* PAUSA Y REDUCED MOTION */
+    .svg-paused * {
+      animation-play-state: paused !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .svg-hero-wrapper svg * {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    /* BLOQUES DE CÓDIGO Y PROMPTS COPIABLES */
+    .code-block-container {
+      background: #050811;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin: 14px 0;
+      overflow: hidden;
+    }
+
+    .code-block-header {
+      background: #111c33;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    .code-block-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      font-family: monospace;
+    }
+
+    .copy-btn {
+      min-height: 38px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-cyan);
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-cyan);
+      color: #0a0e1a;
+    }
+
+    pre.prompt-pre {
+      padding: 14px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: #f1f5f9;
+    }
+
+    /* ENLACES CON BOTÓN OBLIGATORIO "Abrir enlace en nueva ventana" */
+    .url-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      margin: 10px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .url-text {
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      word-break: break-all;
+    }
+
+    .url-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .open-url-btn {
+      min-height: 42px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: var(--accent-cyan);
+      color: #0a0e1a;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .open-url-btn:hover {
+      background: var(--accent-bright);
+    }
+
+    /* DESPLEGABLES (DETAILS / SUMMARY) */
+    details.qa-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    details.qa-item summary {
+      padding: 14px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--text-primary);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 48px;
+    }
+
+    details.qa-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.qa-item summary::after {
+      content: "＋";
+      color: var(--accent-cyan);
+      font-size: 1.2rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    details.qa-item[open] summary::after {
+      content: "－";
+    }
+
+    details.qa-item[open] summary {
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .qa-body {
+      padding: 14px 16px;
+      color: var(--text-primary);
+    }
+
+    /* TABLAS ADAPTABLES */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      margin: 14px 0;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 290px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--bg-elevated);
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    /* CHECKLIST INTERACTIVO */
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-color);
+      margin-bottom: 8px;
+      cursor: pointer;
+      min-height: 46px;
+    }
+
+    .checklist-item input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      margin-top: 2px;
+      accent-color: var(--accent-emerald);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .checklist-item.completed span {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+    }
+
+    /* NAVEGACIÓN INFERIOR EN CADA PESTAÑA (ANTERIOR / SIGUIENTE) */
+    .tab-footer-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 28px;
+      padding: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      position: sticky;
+      bottom: 10px;
+      z-index: 15;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .nav-step-btn {
+      min-height: 46px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--accent-cyan);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-step-btn.next-btn {
+      background: var(--accent-cyan);
+      color: #0a0e1a;
+      margin-left: auto;
+    }
+
+    .nav-step-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.35);
+    }
+
+    /* BOTONES FLOTANTES ARRASTRABLES (INICIO Y ARRIBA) */
+    .draggable-fab {
+      position: fixed;
+      z-index: 35;
+      min-height: 46px;
+      min-width: 96px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.82rem;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+      border: 2px solid #ffffff33;
+      transition: box-shadow 0.2s, transform 0.1s;
+    }
+
+    .draggable-fab:active {
+      cursor: grabbing;
+      transform: scale(1.04);
+    }
+
+    #fab-home {
+      bottom: 140px;
+      right: 12px;
+      background: linear-gradient(135deg, #0284c7, #1e3a5f);
+      color: #ffffff;
+      border-color: var(--accent-cyan);
+    }
+
+    #fab-top {
+      bottom: 84px;
+      right: 12px;
+      background: linear-gradient(135deg, #059669, #064e3b);
+      color: #ffffff;
+      border-color: var(--accent-emerald);
+    }
+
+    /* CRÉDITOS DESTACADO */
+    .credits-author-box {
+      text-align: center;
+      padding: 26px 16px;
+      background: radial-gradient(circle, rgba(30, 58, 95, 0.5) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border: 2px solid var(--accent-cyan);
+      border-radius: 18px;
+      margin: 20px 0;
+    }
+
+    .credits-author-name {
+      font-size: clamp(2rem, 7vw, 3.4rem);
+      font-weight: 900;
+      color: var(--accent-cyan);
+      letter-spacing: -0.02em;
+      text-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
+      margin-bottom: 6px;
+    }
+
+    .credits-author-role {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* NOTIFICACIÓN TOAST */
+    #toast-notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--accent-emerald);
+      color: #050811;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      z-index: 60;
+      transition: transform 0.25s ease;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    #toast-notification.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* OPTIMIZACIÓN SAMSUNG GALAXY A02s (360px Viewport) */
+    @media (max-width: 400px) {
+      body {
+        padding-left: 0;
+        padding-right: 0;
+      }
+      main, .utility-bar {
+        padding: 0 8px;
+      }
+      .card {
+        padding: 14px 12px;
+      }
+      .chip {
+        padding: 6px 11px;
+        font-size: 0.82rem;
+      }
+      .tab-footer-nav {
+        padding: 12px 10px;
+      }
+      .nav-step-btn {
+        padding: 8px 12px;
+        font-size: 0.82rem;
+      }
+      th, td {
+        padding: 8px;
+        font-size: 0.82rem;
+      }
+    }
+
+    /* HOJA DE ESTILOS DE IMPRESIÓN A4 VERTICAL */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 14mm 12mm 14mm 12mm;
+      }
+
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        font-size: 11pt !important;
+      }
+
+      nav#main-nav,
+      #dr,
+      .utility-bar,
+      #reading-progress-container,
+      .draggable-fab,
+      .tab-footer-nav,
+      .svg-controls,
+      .copy-btn,
+      #toast-notification {
+        display: none !important;
+      }
+
+      .tab-sec {
+        display: block !important;
+        opacity: 1 !important;
+        transform: none !important;
+        margin-bottom: 24px !important;
+        page-break-inside: auto;
+      }
+
+      .card, .step-item, .pedagogy-item, details.qa-item, .code-block-container, .url-card {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border: 1px solid #888888 !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+      }
+
+      h1, h2, h3, h4, p, li, td, th, summary, .qa-body, .credits-author-name {
+        color: #000000 !important;
+        text-shadow: none !important;
+      }
+
+      pre.prompt-pre {
+        background: #f5f5f5 !important;
+        color: #000000 !important;
+        border: 1px solid #cccccc !important;
+        white-space: pre-wrap !important;
+      }
+
+      .svg-hero-wrapper {
+        max-width: 280px !important;
+        border: 1px solid #000000 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA DE PROGRESO SUPERIOR -->
+  <div id="reading-progress-container" aria-hidden="true">
+    <div id="reading-progress-bar"></div>
+  </div>
+
+  <!-- BARRA DE NAVEGACIÓN FIJA CON BOTÓN ☰ Índice AL PRINCIPIO -->
+  <nav id="main-nav" aria-label="Navegación principal del tutorial">
+    <button class="chip" id="mb" aria-label="Abrir índice" aria-expanded="false">☰ Índice</button>
+    <button class="chip nav-tab-btn active" data-tab="0">INICIO</button>
+    <button class="chip nav-tab-btn" data-tab="1">CONCEPTOS</button>
+    <button class="chip nav-tab-btn" data-tab="2">PROCEDIMIENTO</button>
+    <button class="chip nav-tab-btn" data-tab="3">PRÁCTICA</button>
+    <button class="chip nav-tab-btn" data-tab="4">PROMPTS</button>
+    <button class="chip nav-tab-btn" data-tab="5">33 Preguntas (Q&amp;A)</button>
+    <button class="chip nav-tab-btn" data-tab="6">ERRORES</button>
+    <button class="chip nav-tab-btn" data-tab="7">RESUMEN</button>
+    <button class="chip nav-tab-btn" data-tab="8">FUENTES</button>
+    <button class="chip nav-tab-btn" data-tab="9">CRÉDITOS</button>
+  </nav>
+  <div id="dr" role="navigation" aria-label="Índice lateral de secciones"></div>
+
+  <!-- BARRA DE HERRAMIENTAS INTERACTIVAS -->
+  <div class="utility-bar">
+    <div class="search-wrapper">
+      <input type="search" id="global-search" class="search-input" placeholder="Buscar concepto, prompt, Veo 3.1, cómic..." aria-label="Buscar en el tutorial">
+    </div>
+    <div class="tools-group">
+      <button type="button" class="tool-btn" id="btn-font-dec" title="Reducir tamaño de letra" aria-label="Reducir tamaño de letra">A−</button>
+      <button type="button" class="tool-btn" id="btn-font-inc" title="Aumentar tamaño de letra" aria-label="Aumentar tamaño de letra">A+</button>
+      <button type="button" class="tool-btn" id="btn-theme-toggle" title="Cambiar tema claro u oscuro" aria-label="Cambiar tema visual">🌓 Tema</button>
+      <button type="button" class="tool-btn" id="btn-print-pdf" title="Imprimir o guardar en PDF" aria-label="Imprimir o guardar como PDF">🖨️ PDF</button>
+    </div>
+  </div>
+
+  <!-- PANEL DE RESULTADOS DE BÚSQUEDA -->
+  <div id="search-results-panel" role="region" aria-live="polite"></div>
+
+  <!-- PLANTILLA SVG OCULTA (SE EXTRAE Y ELIMINA DEL DOM AL INICIAR) -->
+  <div id="svg-master-source" style="display:none;" aria-hidden="true">
+    <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustración animada de la arquitectura cognitiva de Gemini Notebook con anclaje documental y los 5 flujos de producción multimedia">
+      <defs>
+        <linearGradient id="bgGrad__UID__" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#060b18"/>
+          <stop offset="50%" stop-color="#0f1d3a"/>
+          <stop offset="100%" stop-color="#071021"/>
+        </linearGradient>
+        <radialGradient id="coreGlow__UID__" cx="50%" cy="48%" r="42%">
+          <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.65"/>
+          <stop offset="55%" stop-color="#38bdf8" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="#0a0e1a" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="beamCyan__UID__" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.1"/>
+          <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#a855f7" stop-opacity="0.2"/>
+        </linearGradient>
+        <filter id="neonBlur__UID__" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3.5" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- CAPA 1: FONDO Y REJILLA DE PERSPECTIVA -->
+      <rect width="400" height="500" fill="url(#bgGrad__UID__)"/>
+      <circle cx="200" cy="240" r="185" fill="url(#coreGlow__UID__)">
+        <animate attributeName="r" values="165;195;165" dur="5s" repeatCount="indefinite"/>
+      </circle>
+
+      <g stroke="#1e3a5f" stroke-width="0.7" opacity="0.45">
+        <line x1="0" y1="70" x2="400" y2="70"/>
+        <line x1="0" y1="140" x2="400" y2="140"/>
+        <line x1="0" y1="210" x2="400" y2="210"/>
+        <line x1="0" y1="280" x2="400" y2="280"/>
+        <line x1="0" y1="350" x2="400" y2="350"/>
+        <line x1="0" y1="420" x2="400" y2="420"/>
+        <line x1="65" y1="0" x2="65" y2="500"/>
+        <line x1="135" y1="0" x2="135" y2="500"/>
+        <line x1="200" y1="0" x2="200" y2="500"/>
+        <line x1="265" y1="0" x2="265" y2="500"/>
+        <line x1="335" y1="0" x2="335" y2="500"/>
+      </g>
+
+      <!-- CAPA 2: ANILLOS ORBITALES DE ANCLAJE (GROUNDING) -->
+      <g transform="translate(200, 240)">
+        <circle r="142" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="10 8" opacity="0.55">
+          <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="26s" repeatCount="indefinite"/>
+        </circle>
+        <circle r="112" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="18 12" opacity="0.65">
+          <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="18s" repeatCount="indefinite"/>
+        </circle>
+        <circle r="82" fill="none" stroke="#10b981" stroke-width="1.2" stroke-dasharray="6 6" opacity="0.6">
+          <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="12s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+
+      <!-- CAPA 3: CONEXIONES SINÁPTICAS HACIA LOS 5 MÓDULOS -->
+      <g stroke="url(#beamCyan__UID__)" stroke-width="2.2" fill="none">
+        <!-- Hacia Cómic (Arriba Izquierda) -->
+        <path d="M200,240 Q130,170 78,105" stroke-dasharray="6 4">
+          <animate attributeName="stroke-dashoffset" from="40" to="0" dur="2.2s" repeatCount="indefinite"/>
+        </path>
+        <!-- Hacia Mapa Mental (Arriba Derecha) -->
+        <path d="M200,240 Q270,170 322,105" stroke-dasharray="6 4">
+          <animate attributeName="stroke-dashoffset" from="40" to="0" dur="2.5s" repeatCount="indefinite"/>
+        </path>
+        <!-- Hacia Vídeo IA Veo/Omni (Centro Izquierda) -->
+        <path d="M200,240 Q120,255 62,275" stroke-dasharray="6 4">
+          <animate attributeName="stroke-dashoffset" from="40" to="0" dur="1.9s" repeatCount="indefinite"/>
+        </path>
+        <!-- Hacia Apuntes A4 (Centro Derecha) -->
+        <path d="M200,240 Q280,255 338,275" stroke-dasharray="6 4">
+          <animate attributeName="stroke-dashoffset" from="40" to="0" dur="2.1s" repeatCount="indefinite"/>
+        </path>
+        <!-- Hacia Curso Interactivo 5 Módulos (Abajo Centro) -->
+        <path d="M200,240 L200,395" stroke-dasharray="6 4">
+          <animate attributeName="stroke-dashoffset" from="40" to="0" dur="1.8s" repeatCount="indefinite"/>
+        </path>
+      </g>
+
+      <!-- CAPA 4: NÚCLEO CENTRAL GEMINI NOTEBOOK (3 PANELES + GROUNDING) -->
+      <g transform="translate(200, 240)" filter="url(#neonBlur__UID__)">
+        <polygon points="0,-54 47,-27 47,27 0,54 -47,27 -47,-27" fill="#0f172a" stroke="#00d4ff" stroke-width="2.5">
+          <animate attributeName="stroke-width" values="2;3.8;2" dur="3s" repeatCount="indefinite"/>
+        </polygon>
+        <!-- Representación de los 3 Paneles: Fuentes | Chat | Estudio -->
+        <rect x="-28" y="-20" width="14" height="40" rx="2" fill="#38bdf8" opacity="0.85"/>
+        <rect x="-10" y="-20" width="20" height="40" rx="2" fill="#a855f7" opacity="0.9"/>
+        <rect x="14" y="-20" width="14" height="40" rx="2" fill="#10b981" opacity="0.85"/>
+        <!-- Chispa Estelar Central Gemini -->
+        <path d="M0,-14 Q2,-2 14,0 Q2,2 0,14 Q-2,2 -14,0 Q-2,-2 0,-14 Z" fill="#ffffff">
+          <animateTransform attributeName="transform" type="scale" values="0.85;1.25;0.85" dur="2.4s" repeatCount="indefinite"/>
+        </path>
+      </g>
+
+      <!-- CAPA 5: LOS 5 SATÉLITES DE CASOS DE USO AVANZADOS -->
+      <!-- 1. Factoría de Cómic 16:9 -->
+      <g transform="translate(75, 95)">
+        <animateTransform attributeName="transform" type="translate" values="75,95; 75,87; 75,95" dur="3.5s" repeatCount="indefinite"/>
+        <rect x="-38" y="-26" width="76" height="52" rx="8" fill="#0f172a" stroke="#f43f5e" stroke-width="2"/>
+        <line x1="-10" y1="-26" x2="-10" y2="26" stroke="#f43f5e" stroke-width="1.5"/>
+        <line x1="-10" y1="0" x2="38" y2="0" stroke="#f43f5e" stroke-width="1.5"/>
+        <text x="0" y="38" fill="#f43f5e" font-size="9.5" font-weight="bold" text-anchor="middle" font-family="sans-serif">1. CÓMIC IA 16:9</text>
+      </g>
+
+      <!-- 2. Mapa Mental Visual -->
+      <g transform="translate(325, 95)">
+        <animateTransform attributeName="transform" type="translate" values="325,95; 325,87; 325,95" dur="4s" repeatCount="indefinite"/>
+        <rect x="-38" y="-26" width="76" height="52" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="0" cy="-6" r="6" fill="#38bdf8"/>
+        <circle cx="-18" cy="12" r="5" fill="#00d4ff"/>
+        <circle cx="18" cy="12" r="5" fill="#00d4ff"/>
+        <line x1="0" y1="0" x2="-18" y2="7" stroke="#38bdf8" stroke-width="1.5"/>
+        <line x1="0" y1="0" x2="18" y2="7" stroke="#38bdf8" stroke-width="1.5"/>
+        <text x="0" y="38" fill="#38bdf8" font-size="9.5" font-weight="bold" text-anchor="middle" font-family="sans-serif">2. MAPA VISUAL</text>
+      </g>
+
+      <!-- 3. Vídeo Cinemático Veo 3.1 / Omni -->
+      <g transform="translate(62, 275)">
+        <animateTransform attributeName="transform" type="translate" values="62,275; 62,267; 62,275" dur="3.2s" repeatCount="indefinite"/>
+        <rect x="-40" y="-26" width="80" height="52" rx="8" fill="#0f172a" stroke="#a855f7" stroke-width="2"/>
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#a855f7" stroke-width="2"/>
+        <polygon points="-4,-6 8,0 -4,6" fill="#a855f7"/>
+        <text x="0" y="38" fill="#a855f7" font-size="9.5" font-weight="bold" text-anchor="middle" font-family="sans-serif">3. VEO 3.1 / OMNI</text>
+      </g>
+
+      <!-- 4. Apuntes Manuscritos a Limpio -->
+      <g transform="translate(338, 275)">
+        <animateTransform attributeName="transform" type="translate" values="338,275; 338,267; 338,275" dur="3.8s" repeatCount="indefinite"/>
+        <rect x="-34" y="-28" width="68" height="54" rx="6" fill="#0f172a" stroke="#f59e0b" stroke-width="2"/>
+        <line x1="-20" y1="-12" x2="20" y2="-12" stroke="#f59e0b" stroke-width="3"/>
+        <line x1="-20" y1="0" x2="14" y2="0" stroke="#e2e8f0" stroke-width="2"/>
+        <circle cx="16" cy="12" r="6" fill="none" stroke="#f43f5e" stroke-width="2"/>
+        <text x="0" y="39" fill="#f59e0b" font-size="9.5" font-weight="bold" text-anchor="middle" font-family="sans-serif">4. NOTAS A4 PRO</text>
+      </g>
+
+      <!-- 5. Curso Interactivo 5 Módulos -->
+      <g transform="translate(200, 412)">
+        <animateTransform attributeName="transform" type="translate" values="200,412; 200,404; 200,412" dur="3.4s" repeatCount="indefinite"/>
+        <rect x="-68" y="-26" width="136" height="50" rx="10" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+        <rect x="-54" y="-12" width="16" height="22" rx="2" fill="#10b981"/>
+        <rect x="-30" y="-12" width="16" height="22" rx="2" fill="#10b981" opacity="0.85"/>
+        <rect x="-6" y="-12" width="16" height="22" rx="2" fill="#10b981" opacity="0.7"/>
+        <rect x="18" y="-12" width="16" height="22" rx="2" fill="#10b981" opacity="0.85"/>
+        <rect x="42" y="-12" width="16" height="22" rx="2" fill="#38bdf8"/>
+        <text x="0" y="38" fill="#10b981" font-size="9.5" font-weight="bold" text-anchor="middle" font-family="sans-serif">5. CURSO INTERACTIVO (5 MÓDULOS)</text>
+      </g>
+
+      <!-- CAPA 6: CABECERA TÉCNICA SUPERIOR -->
+      <rect x="35" y="16" width="330" height="30" rx="15" fill="#0f172a" stroke="#1e3a5f" stroke-width="1.5"/>
+      <text x="200" y="35" fill="#00d4ff" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace" letter-spacing="1.2">GROUNDING ENGINE • 3 PANELS • STUDIO AI</text>
+    </svg>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL SPA -->
+  <main id="tutorial-main">
+
+    <!-- ==========================================
+         PESTAÑA 0: INICIO (HOME)
+         ========================================== -->
+    <section class="tab-sec active" id="sec-inicio" data-t="INICIO">
+      <div class="svg-hero-wrapper" id="svg-mount-home" role="img" aria-label="Ilustración interactiva animada del ecosistema Gemini Notebook y sus cinco casos de uso maestros"></div>
+
+      <div class="svg-controls">
+        <button type="button" class="tool-btn" id="btn-toggle-svg-anim">⏸️ Pausar/Reanudar Animación</button>
+        <button type="button" class="tool-btn" id="ix" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">☰ Ver índice</button>
+      </div>
+
+      <div class="card card-highlight">
+        <span class="badge badge-cyan">Edición Agencia Premium V001</span>
+        <span class="badge badge-emerald">100% Documental y Autodidacta</span>
+        <h1>Manual Maestro de Usos Avanzados de Gemini Notebook <span class="by-author-inline">by Rubén Sbarsky</span></h1>
+        <p>Bienvenido a la guía integral paso a paso para dominar <strong>Gemini Notebook</strong> (conocido originalmente como NotebookLM) desde cero hasta nivel de arquitectura avanzada. Aprenderás a transformar documentos estáticos en cómics consistentes, mapas mentales editoriales, prompts técnicos de vídeo cinemático para Veo 3.1 y Google Omni, apuntes escolares digitalizados y cursos interactivos completos.</p>
+      </div>
+
+      <!-- SECUENCIA PEDAGÓGICA: QUÉ ES / PARA QUÉ SIRVE / POR QUÉ IMPORTA -->
+      <div class="pedagogy-grid">
+        <div class="pedagogy-item">
+          <strong>1. ¿QUÉ ES GEMINI NOTEBOOK?</strong>
+          <p>Es un entorno de trabajo cognitivo y banco de pruebas analítico asistido por inteligencia artificial desarrollado por Google que opera bajo un modelo cerrado de anclaje documental (<em>grounding</em>).</p>
+        </div>
+        <div class="pedagogy-item">
+          <strong>2. ¿PARA QUÉ SIRVE?</strong>
+          <p>Sirve para investigar, sintetizar y producir artefactos multimedia (presentaciones, infografías, guiones, cursos interactivos y prompts técnicos) basándose únicamente en los documentos que tú elijas.</p>
+        </div>
+        <div class="pedagogy-item">
+          <strong>3. ¿POR QUÉ IMPORTA?</strong>
+          <p>Porque elimina el problema más grave de los chats genéricos de IA: las alucinaciones (datos inventados). Cada respuesta incluye citas trazables a tus propios documentos.</p>
+        </div>
+      </div>
+
+      <!-- ÍNDICE MAESTRO JERÁRQUICO Y EXHAUSTIVO DEL DOCUMENTO FUENTE -->
+      <div class="card">
+        <h2>Índice Maestro Jerárquico y Exhaustivo del Manual</h2>
+        <p>Este tutorial interactivo cubre el 100% de la arquitectura operativa y los 5 flujos de trabajo maestros sin omitir un solo detalle:</p>
+        <ol>
+          <li><strong>1. FUNDAMENTOS Y ARQUITECTURA OPERATIVA DE GEMINI NOTEBOOK</strong>
+            <ul>
+              <li>1.1. ¿Qué es Gemini Notebook y en qué se diferencia de un chat convencional de IA?</li>
+              <li>1.2. El principio del anclaje documental (<em>grounding</em>) y mitigación de alucinaciones.</li>
+              <li>1.3. Requisitos técnicos de acceso, compatibilidad de navegadores y cuentas de Google.</li>
+              <li>1.4. Interfaz de tres paneles: Fuentes (izquierda), Conversación/Chat (centro) y Estudio (derecha).</li>
+              <li>1.5. Tipos de fuentes admitidas: límites de carga, formatos (PDF, DOCX, TXT, Web, YouTube, Audio, Imágenes).</li>
+            </ul>
+          </li>
+          <li><strong>2. CONFIGURACIÓN INICIAL Y DIRECTRICES DEL SISTEMA</strong>
+            <ul>
+              <li>2.1. Creación y nomenclatura estratégica de cuadernos de trabajo.</li>
+              <li>2.2. Configuración del chat personalizado: el menú de tres puntos y las instrucciones de sistema (<em>system prompts</em>).</li>
+              <li>2.3. Gestión del panel de fuentes: selección, deselección estratégica y aislamiento de contexto.</li>
+              <li>2.4. El ciclo de retroalimentación de notas: guardar respuestas como notas y convertir notas en fuentes activas.</li>
+            </ul>
+          </li>
+          <li><strong>3. PROCEDIMIENTOS Y FLUJOS DE TRABAJO AVANZADOS (LOS 5 USOS MAESTROS)</strong>
+            <ul>
+              <li>3.1. Caso de Uso 1: Factoría de Cómic y Novela Gráfica (Superación de la "amnesia" visual, rol del Arquitecto, entrevista interactiva y presentación 16:9).</li>
+              <li>3.2. Caso de Uso 2: Ingeniería de Mapas Mentales Visuales (Limitaciones del mapa nativo, secuencia de 4 clics, reingreso multimodal e infografía editorial).</li>
+              <li>3.3. Caso de Uso 3: Consultoría Especializada en Prompts de Vídeo Cinemático con IA (Google Veo 3.1, Google Omni 1.1, Google Omni Flash 1.2 y ejecución en Google Flow).</li>
+              <li>3.4. Caso de Uso 4: Digitalización y Restauración Didáctica de Apuntes Manuscritos (Visión multimodal, infografía vertical A4, resaltadores neón y esquemas).</li>
+              <li>3.5. Caso de Uso 5: Arquitectura de Cursos Interactivos Modulares a partir de Documentos Complejos (5 módulos, glosario, presentaciones, flashcards y examen).</li>
+            </ul>
+          </li>
+          <li><strong>4. BUENAS PRÁCTICAS, SEGURIDAD, LIMITACIONES Y SOLUCIÓN DE PROBLEMAS</strong></li>
+          <li><strong>5. PROYECTOS INTEGRADORES MULTIDISCIPLINARES (360° y Oposiciones)</strong></li>
+          <li><strong>6. GLOSARIO TÉCNICO TERMINOLÓGICO</strong></li>
+          <li><strong>7. EVALUACIÓN Y BANCO DE 33 PREGUNTAS Y RESPUESTAS (Nivel 1, Nivel 2 y Nivel 3)</strong></li>
+          <li><strong>8. REPOSITORIO COMPLETO DE PROMPTS OPERATIVOS</strong></li>
+          <li><strong>9. FUENTES FIABLES, REPOSITORIOS Y ENLACES OFICIALES</strong></li>
+        </ol>
+      </div>
+
+      <div class="tab-footer-nav">
+        <span>Estás en el inicio del manual</span>
+        <button type="button" class="nav-step-btn next-btn" data-goto="1">Siguiente: CONCEPTOS ➔</button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 1: CONCEPTOS
+         ========================================== -->
+    <section class="tab-sec" id="sec-conceptos" data-t="CONCEPTOS">
+      <h2>1. Fundamentos, Arquitectura Operativa y Configuración Inicial</h2>
+
+      <div class="card card-highlight">
+        <h3>1.1. ¿Qué es Gemini Notebook y en qué se diferencia de un chat convencional de IA?</h3>
+        <p><strong>Gemini Notebook</strong> (conocido originalmente en su desarrollo preliminar como <strong>NotebookLM</strong>) es un entorno de trabajo cognitivo y un banco de pruebas analítico asistido por inteligencia artificial desarrollado por Google. A diferencia de un modelo de chat conversacional genérico (como Gemini Web, ChatGPT o Claude en su modalidad estándar), Gemini Notebook opera sobre un <strong>modelo cerrado de anclaje de conocimiento</strong>.</p>
+        <p>En un chat convencional, la inteligencia artificial responde basándose en su entrenamiento paramétrico global, lo que genera dos problemas habituales para el estudiante o profesional:</p>
+        <ul>
+          <li><strong>Riesgo de alucinaciones:</strong> Inventar datos plausibles pero falsos cuando desconoce un detalle.</li>
+          <li><strong>Falta de referencias verificables:</strong> Imposibilidad de auditar de qué página o documento salió un dato.</li>
+        </ul>
+        <p>En cambio, en Gemini Notebook, <strong>el usuario es quien define el universo de conocimiento</strong> mediante la carga de fuentes específicas. La herramienta actúa como un copiloto de síntesis que prioriza y restringe sus respuestas a los documentos incorporados.</p>
+      </div>
+
+      <div class="card">
+        <h3>1.2. El principio del anclaje documental (<em>grounding</em>) y mitigación de alucinaciones</h3>
+        <p>El <strong><em>grounding</em></strong> (anclaje documental) es el proceso algorítmico mediante el cual cada afirmación generada por el sistema se encuentra vinculada de forma estricta y trazable a un fragmento de las fuentes activas. Cuando se formula una pregunta en el chat o se solicita la creación de un artefacto, el motor ejecuta 4 etapas:</p>
+        <ol>
+          <li>El sistema realiza una <strong>búsqueda semántica de alta precisión</strong> en las fuentes seleccionadas.</li>
+          <li>Identifica los fragmentos o pasajes de información relevantes.</li>
+          <li>Sintetiza la respuesta <strong>citando de manera unívoca</strong> los pasajes correspondientes.</li>
+          <li>Si la respuesta a la pregunta no se encuentra en las fuentes suministradas, el sistema está instruido para <strong>advertir dicha ausencia</strong> en lugar de recurrir a conocimiento externo no verificado.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>1.3. Requisitos técnicos de acceso, compatibilidad de navegadores y cuentas de Google</h3>
+        <p>Para operar con Gemini Notebook con fluidez técnica se requieren los siguientes elementos:</p>
+        <ul>
+          <li><strong>Cuenta de Google activa:</strong> Se admite el uso de cuentas personales (<code>@gmail.com</code>) y cuentas corporativas o educativas de Google Workspace (estas últimas sujetas a las directrices y permisos de habilitación de su respectivo administrador de dominio).</li>
+          <li><strong>Navegador web compatible:</strong> Se recomienda Google Chrome, Mozilla Firefox, Microsoft Edge o Apple Safari en sus versiones actualizadas. Es aconsejable deshabilitar extensiones que bloqueen la ejecución de scripts o cookies de sesión durante el trabajo en el panel de creación.</li>
+          <li><strong>Acceso a internet estable:</strong> Al tratarse de una solución procesada íntegramente en la nube de Google, el procesamiento de audio, síntesis de vídeo, maquetación de informes y renderizado de infografías <strong>no consume recursos de hardware local (CPU/GPU)</strong>, pero demanda una conexión constante para la sincronización de artefactos.</li>
+        </ul>
+      </div>
+
+      <div class="card card-highlight">
+        <h3>1.4. Interfaz de tres paneles: Fuentes, Conversación y Estudio</h3>
+        <p>La interfaz gráfica de usuario está estructurada bajo una disposición ergonómica de tres columnas claramente diferenciadas:</p>
+        <div class="pedagogy-grid">
+          <div class="pedagogy-item">
+            <strong>Panel Izquierdo (Fuentes / Knowledge)</strong>
+            <p>Espacio de administración donde se cargan, revisan, habilitan o deshabilitan los documentos de referencia. Cada fuente dispone de una casilla de verificación (<em>checkbox</em>) que determina si forma parte del contexto de trabajo activo.</p>
+          </div>
+          <div class="pedagogy-item">
+            <strong>Panel Central (Chat / Conversación)</strong>
+            <p>Área de diálogo interactivo donde se formulan consultas, se solicitan resúmenes comparativos y se configuran las instrucciones de sistema personalizadas. Permite guardar cualquier fragmento o respuesta directamente como una nota interna.</p>
+          </div>
+          <div class="pedagogy-item">
+            <strong>Panel Derecho (Estudio / Studio)</strong>
+            <p>Centro de generación y almacenamiento de artefactos multimedia y documentos de trabajo estructurados: resúmenes de audio, descripciones generales de vídeo, mapas mentales, infografías, presentaciones, cuestionarios, tarjetas didácticas e informes interactivos.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>1.5. Tipos de fuentes admitidas y gestión de capacidad</h3>
+        <p>Gemini Notebook admite una amplia diversidad de soportes de entrada:</p>
+        <ul>
+          <li><strong>Documentos de Google Drive:</strong> Google Docs, Google Sheets y Google Slides.</li>
+          <li><strong>Archivos locales descargados:</strong> Archivos de texto en formato PDF, documentos de Microsoft Word (<code>.docx</code>), archivos de texto plano (<code>.txt</code>) y Markdown (<code>.md</code>).</li>
+          <li><strong>Direcciones Web (URLs):</strong> Enlaces a artículos de blogs, documentación técnica en línea y repositorios web de lectura pública.</li>
+          <li><strong>Vídeos de YouTube:</strong> Transcripciones automáticas y metadatos de vídeos públicos o no listados que cuenten con subtítulos habilitados.</li>
+          <li><strong>Archivos de imagen y notas manuscritas:</strong> Capturas de pantalla, esquemas dibujados a mano y fotografías de apuntes en formatos gráficos comunes (<code>PNG</code>, <code>JPG</code>, <code>WEBP</code>).</li>
+          <li><strong>Grabaciones de audio:</strong> Archivos sonoros para transcripción y extracción semántica automática.</li>
+        </ul>
+      </div>
+
+      <div class="card card-success">
+        <h3>2. Configuración Inicial y Directrices del Sistema</h3>
+        <h4>2.1. Creación y nomenclatura estratégica de cuadernos de trabajo</h4>
+        <p>Para evitar la contaminación cruzada de conceptos, la mejor práctica consiste en crear un cuaderno específico para cada objetivo o proyecto particular:</p>
+        <ul>
+          <li>Accede a la pantalla de bienvenida y haz clic en el botón <strong>+ Nuevo cuaderno</strong>.</li>
+          <li>Asigna un nombre claro, jerárquico y contextualizado (por ejemplo: <code>PROYECTO_COMIC_ARQUITECTURA</code>, <code>VÍDEO_PROMPTS_GOOGLE_FLOW</code>, o <code>CURSO_HISTORIA_TERCIOS_FLANDES</code>).</li>
+        </ul>
+
+        <h4>2.2. Configuración del chat personalizado: el menú de tres puntos</h4>
+        <p>Gemini Notebook permite modificar la personalidad, nivel de rigor y directrices metodológicas de sus respuestas mediante instrucciones de sistema permanentes para el cuaderno:</p>
+        <ol>
+          <li>Localiza el panel central de chat.</li>
+          <li>Haz clic en el icono de los <strong>tres puntos verticales</strong> situado en la esquina superior del panel de conversación.</li>
+          <li>Selecciona la opción <strong>Configurar chat personalizado</strong> (o <em>Instrucciones del Chat</em>).</li>
+          <li>Introduce en el cuadro de texto las directrices maestras (por ejemplo, el protocolo de Arquitecto de Guiones o el perfil de Consultor de Prompts de Vídeo).</li>
+          <li>Pulsa en <strong>Guardar</strong>. A partir de ese momento, todas las interacciones del chat responderán bajo dicho marco de trabajo.</li>
+        </ol>
+
+        <h4>2.3. Gestión del panel de fuentes: selección, deselección estratégica y aislamiento de contexto</h4>
+        <p>Una de las funcionalidades más potentes y menos comprendidas por los usuarios noveles es la <strong>selección selectiva de fuentes</strong>:</p>
+        <ul>
+          <li>De forma predeterminada, todas las fuentes añadidas tienen su casilla marcada, lo que significa que el chat responderá analizando la totalidad de los documentos.</li>
+          <li>Para flujos avanzados (como transformar un mapa mental o convertir un guion en presentación), es <strong>obligatorio</strong> desmarcar todas las fuentes generales y dejar seleccionada <strong>únicamente la fuente específica</strong> que contiene el esquema o guion a renderizar. Esto aísla el contexto e impide que la herramienta mezcle conceptos ajenos.</li>
+        </ul>
+
+        <h4>2.4. El ciclo de retroalimentación de notas: guardar como nota y convertir en fuente</h4>
+        <p>Este flujo circular representa el núcleo de las automatizaciones avanzadas dentro del cuaderno:</p>
+        <ol>
+          <li>El usuario interactúa con el chat personalizado y obtiene una respuesta estructurada (por ejemplo, el guion técnico de un cómic).</li>
+          <li>En la parte inferior de la respuesta generada, pulsa el botón <strong>Guardar en una nota</strong> (icono de chincheta/nota).</li>
+          <li>La nota se almacena en el panel correspondiente. Al hacer clic en los tres puntos de dicha nota, se selecciona la opción <strong>Convertir en fuente</strong>.</li>
+          <li>La respuesta generada por la IA pasa a formar parte de la biblioteca de documentos de entrada, permitiendo que las herramientas del panel de Estudio operen directamente sobre ella.</li>
+        </ol>
+      </div>
+
+      <div class="tab-footer-nav">
+        <button type="button" class="nav-step-btn" data-goto="0">⬅ Anterior: INICIO</button>
+        <button type="button" class="nav-step-btn next-btn" data-goto="2">Siguiente: PROCEDIMIENTO ➔</button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 2: PROCEDIMIENTO (LOS 5 USOS MAESTROS)
+         ========================================== -->
+    <section class="tab-sec" id="sec-procedimiento" data-t="PROCEDIMIENTO">
+      <h2>3. Procedimientos y Flujos de Trabajo Avanzados (Los 5 Usos Maestros)</h2>
+      <p>Cada uno de los 5 procedimientos sigue una estructura paso a paso con una sola acción principal por paso, explicando el motivo técnico y el resultado esperado.</p>
+
+      <!-- CASO DE USO 1 -->
+      <div class="card card-highlight">
+        <span class="badge badge-cyan">Caso de Uso 1</span>
+        <h3>3.1. Factoría de Cómic y Novela Gráfica (Superación de la "Amnesia" Visual)</h3>
+        <p><strong>3.1.1. Fundamento conceptual:</strong> Los modelos generadores de imágenes por IA padecen una limitación conocida como <strong>"amnesia entre paneles"</strong>: carecen de memoria contextual persistente entre generaciones independientes. Si en el panel 1 se describe a "un arquitecto arrogante", y en el panel 2 se pide "el arquitecto mirando un plano", el modelo creará una persona con rostro, ropa y edad completamente diferentes. Para lograr continuidad narrativa, el guion debe repetir de forma rigurosa la descripción física, vestimenta y accesorios del personaje en cada viñeta.</p>
+
+        <h4>3.1.2 y 3.1.3. Procedimiento Paso a Paso: Configuración, Entrevista y Guion Técnico</h4>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">1</span> Cargar la fuente de referencia de narrativa gráfica</div>
+            <p>Sube al cuaderno una fuente de referencia sobre estructura y guionización de cómics.</p>
+            <div class="step-meta"><strong>Motivo:</strong> Proveer el vocabulario visual de encuadres y viñetas. | <strong>Resultado esperado:</strong> Fuente listada y marcada en el panel izquierdo.</div>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">2</span> Configurar el rol de Arquitecto de Novela Gráfica en el chat</div>
+            <p>Entra en el menú de los tres puntos verticales del chat central, abre <strong>Configurar chat personalizado</strong>, pega el <em>Prompt de Sistema: Arquitecto de Novela Gráfica</em> (disponible en la pestaña PROMPTS) y pulsa <strong>Guardar</strong>.</p>
+            <div class="step-meta"><strong>Motivo:</strong> Programar la regla anti-amnesia y el formato 16:9. | <strong>Resultado esperado:</strong> El chat adopta el rol de guionista y director visual.</div>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">3</span> Iniciar la entrevista interactiva escribiendo "empezar"</div>
+            <p>En la caja de chat, escribe la palabra <code>empezar</code> y pulsa enviar.</p>
+            <div class="step-meta"><strong>Motivo:</strong> Activar la Fase 1 de Descubrimiento Profundo. | <strong>Resultado esperado:</strong> El sistema formula una pregunta a la vez para no abrumarte.</div>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">4</span> Responder las 6 preguntas de la entrevista estructurada</div>
+            <p>Responde sucesivamente a cada pregunta del asistente:</p>
+            <ul>
+              <li><strong>Pregunta 1 (Concepto y Trama):</strong> Plantea la lección central (ejemplo: un arquitecto imprudente que construye con prisas frente a una arquitecta meticulosa que construye estructuras sólidas, con la moraleja de que la maestría requiere rigor y tiempo).</li>
+              <li><strong>Pregunta 2 (Público objetivo):</strong> Define la audiencia (ejemplo: jóvenes adultos).</li>
+              <li><strong>Pregunta 3 (Extensión):</strong> Especifica el número de páginas (recomendado: de 5 a 10 páginas).</li>
+              <li><strong>Pregunta 4 (Elenco de personajes):</strong> Describe con máximo detalle el aspecto físico de los personajes (edad, peinado, ropa exacta, colores de prendas y accesorios distintivos).</li>
+              <li><strong>Pregunta 5 (Estilo artístico):</strong> Selecciona una corriente estética (ejemplo: cómic <em>noir cinemático</em>, <em>manga</em>, <em>ligne claire</em> o <em>fantasy</em>).</li>
+              <li><strong>Pregunta 6 (Tono e idioma):</strong> Selecciona el tono narrativo (reflexivo, dramático) y el idioma de los bocadillos y textos (español).</li>
+            </ul>
+            <div class="step-meta"><strong>Resultado esperado:</strong> El sistema genera el guion completo en Markdown estructurado en 16:9, desglosando portada, notas de diseño, tipo de encuadre, iluminación, diálogos y descripciones visuales blindadas con repetición física de personajes.</div>
+          </li>
+        </ul>
+
+        <h4>3.1.4. Renderizado Visual: Conversión del Guion y Generación de Presentación 16:9</h4>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">5</span> Guardar el guion generado como una nota interna</div>
+            <p>Al final del guion devuelto por el chat, haz clic en el botón <strong>Guardar en una nota</strong>.</p>
+            <div class="step-meta"><strong>Resultado esperado:</strong> El guion queda almacenado en el panel de notas.</div>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">6</span> Convertir la nota en una fuente documental</div>
+            <p>Ve a la nota recién creada, pulsa en sus tres puntos verticales y haz clic en <strong>Convertir en fuente</strong>.</p>
+            <div class="step-meta"><strong>Resultado esperado:</strong> El guion aparece ahora en la columna izquierda de Fuentes.</div>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">7</span> Aislar el contexto en el panel de Fuentes</div>
+            <p>En el panel izquierdo de <strong>Fuentes</strong>, <strong>desmarca todas las fuentes anteriores</strong> y deja marcada exclusivamente la nueva fuente del guion.</p>
+            <div class="step-meta"><strong>Motivo crítico:</strong> Evitar que la presentación mezcle la teoría general con la historia de tu cómic.</div>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">8</span> Configurar y generar la Presentación detallada en Estudio</div>
+            <p>Dirígete al panel derecho de <strong>Estudio</strong> y selecciona <strong>Presentación</strong>. Configura: Modalidad: <strong>Presentación detallada</strong> | Duración: <strong>Predeterminada</strong> | Idioma: <strong>Español</strong>. Pega el prompt: <code>Crea esta historia como un comic con estilo noir cinemático para un público juvenil</code> y haz clic en <strong>Generar ahora</strong>.</p>
+            <div class="step-meta"><strong>Resultado esperado:</strong> Gemini Notebook ensambla una presentación visual diapositiva a diapositiva que ilustra la novela gráfica completa con portadas, perfiles de personajes y clímax dramático.</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- CASO DE USO 2 -->
+      <div class="card card-highlight">
+        <span class="badge badge-cyan">Caso de Uso 2</span>
+        <h3>3.2. Ingeniería de Mapas Mentales Visuales</h3>
+        <p><strong>3.2.1. Limitaciones del mapa mental nativo convencional:</strong> El generador nativo de mapas mentales de Gemini Notebook crea estructuras esquemáticas basadas en líneas y cajas de texto sobrias. Si bien son útiles para una revisión rápida, carecen de impacto gráfico, memoria visual y anclaje mnemotécnico.</p>
+
+        <h4>3.2.2 y 3.2.3. Procedimiento Paso a Paso: Despliegue, Exportación y Reingreso Multimodal</h4>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">1</span> Cargar fuentes de estudio y generar el Mapa Mental nativo</div>
+            <p>Carga en un cuaderno las fuentes de estudio (por ejemplo, una investigación sobre la vida y obra de Vincent van Gogh). En el panel de <strong>Estudio</strong>, pulsa sobre el botón <strong>Mapa mental</strong> y selecciona <strong>Generar ahora</strong>.</p>
+            <div class="step-meta"><strong>Resultado esperado:</strong> Se crea el esquema jerárquico de nodos en el panel derecho.</div>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">2</span> Ejecutar la secuencia obligatoria de clics en el visor</div>
+            <p>Haz clic sobre el artefacto del mapa mental para abrirlo en el visor interactivo y ejecuta esta secuencia:</p>
+            <ul>
+              <li><strong>Clic 1:</strong> Abrir el mapa en vista a pantalla completa.</li>
+              <li><strong>Clic 2:</strong> Pulsar el icono para desplegar todos los niveles y nodos de una sola vez.</li>
+              <li><strong>Clic 3:</strong> Pulsar el icono de descarga para guardar el mapa mental como archivo de imagen en tu ordenador.</li>
+            </ul>
+            <div class="step-meta"><strong>Motivo:</strong> Si no despliegas todos los nodos antes de descargar, la imagen quedará incompleta.</div>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">3</span> Reingresar la imagen del mapa mental como fuente única</div>
+            <p>En el panel izquierdo de <strong>Fuentes</strong>, pulsa en <strong>Añadir fuentes</strong> y selecciona <strong>Subir archivos</strong>. Sube la imagen del mapa mental descargada. <strong>Paso crítico:</strong> Desmarca todas las fuentes de texto biográfico y deja seleccionada <strong>únicamente la imagen del mapa mental</strong>.</p>
+            <div class="step-meta"><strong>Motivo:</strong> Obligar al motor visual a leer exclusivamente la jerarquía de nodos de la imagen.</div>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">4</span> Renderizar como Infografía Editorial Horizontal (16:9)</div>
+            <p>En el panel de <strong>Estudio</strong>, haz clic en <strong>Infografía</strong>. Configura: Orientación: <strong>Horizontal (16:9)</strong> | Idioma: <strong>Español</strong> | Estilo visual: <strong>Editorial</strong> (o <em>sketch note</em> / <em>artístico</em>) | Nivel de detalle: <strong>Detallado</strong>. Pega el <em>Prompt Mapa Mental</em> (disponible en la pestaña PROMPTS) y pulsa <strong>Generar ahora</strong>.</p>
+            <div class="step-meta"><strong>Resultado esperado:</strong> Un mapa mental visualmente rico, con ilustraciones por nodo y una línea corta explicativa de alto impacto pedagógico.</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- CASO DE USO 3 -->
+      <div class="card card-highlight">
+        <span class="badge badge-purple">Caso de Uso 3</span>
+        <h3>3.3. Consultoría Especializada en Prompts de Vídeo Cinemático con IA</h3>
+        <p><strong>3.3.1. Arquitectura de generación de vídeo:</strong> La producción de vídeo con IA exige vocabulario óptico, de iluminación y cinemático riguroso en inglés. Cada motor cuenta con especificaciones distintas:</p>
+        <ul>
+          <li><strong>Google Veo 3.1:</strong> Destinado a texturas fotorrealistas de alta gama, iluminación volumétrica y consistencia temporal en planos prolongados (requiere especificaciones de lentes, sensores y ratios de obturación como <em>35mm anamorphic lens, shallow depth of field, 24fps motion blur</em>).</li>
+          <li><strong>Google Omni 1.1:</strong> Optimizado para tomas cortas dinámicas (4 a 8 segundos), donde el movimiento de cámara se define preferentemente entre corchetes rectos (ej. <code>[Cinematic Tracking Shot]</code>, <code>[Slow Push-in]</code>, <code>[Low-angle Pan]</code>) o de forma integrada fluida.</li>
+          <li><strong>Google Omni 1.2 / Flash:</strong> Diseñado para densidades cinemáticas complejas, estructurado bajo la fórmula lineal: <code>[Movimiento de cámara] + [Sujeto y acción precisa] + [Entorno dinámico e iluminación] + [Parámetros estéticos y técnicos]</code>.</li>
+        </ul>
+
+        <h4>3.3.2, 3.3.3 y 3.3.4. Procedimiento Paso a Paso y Ejecución en Google Flow</h4>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">1</span> Crear el cuaderno y cargar los manuales técnicos</div>
+            <p>Crea un cuaderno denominado <code>PROMPTS_VIDEO_FLOW</code> y añade como fuentes web las URLs de las guías de prompting de Veo 3.1, Omni 1.1 y Omni Flash 1.2.</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">2</span> Configurar el Protocolo de Arquitecto de Prompts Multimedia</div>
+            <p>Accede al menú de tres puntos del panel central, haz clic en <strong>Configurar chat personalizado</strong>, pega íntegramente el <em>Protocolo de Configuración de Instrucciones de Chat</em> (ver pestaña PROMPTS) y pulsa <strong>Guardar</strong>.</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">3</span> Formular la solicitud de escena en lenguaje natural</div>
+            <p>Escribe tu escena deseada en el chat (por ejemplo, el viajero de los años 70 corriendo por Nueva York en 2026 para Omni 1.2). El sistema devolverá 3 bloques obligatorios: <strong>1. Ficha técnica</strong>, <strong>2. Caja de código ejecutable en inglés con traducción de apoyo</strong> y <strong>3. Parámetros aconsejados y justificación</strong>.</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">4</span> Implementar y renderizar en Google Flow</div>
+            <p>Copia el bloque de código en inglés, abre la plataforma <strong>Google Flow</strong>, selecciona el modelo de destino (ejemplo: <em>Omni 1.2 Flash</em>), configura aspecto <strong>16:9</strong>, duración <strong>10 segundos</strong>, resolución deseada (<strong>720p o 1080p</strong>), pega el prompt y renderiza la escena.</p>
+          </li>
+        </ul>
+      </div>
+
+      <!-- CASO DE USO 4 -->
+      <div class="card card-highlight">
+        <span class="badge badge-amber">Caso de Uso 4</span>
+        <h3>3.4. Digitalización y Restauración Didáctica de Apuntes Manuscritos</h3>
+        <p><strong>3.4.1. Reconocimiento multimodal:</strong> Los apuntes tomados en clase o reuniones suelen presentar tachones, letra irregular, abreviaturas y falta de jerarquía. El motor de visión multimodal de Gemini transcribe la caligrafía, corrige errores conceptuales y amplía definiciones demasiado escuetas.</p>
+
+        <h4>3.4.2 y 3.4.3. Procedimiento Paso a Paso</h4>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">1</span> Fotografiar y subir los apuntes físicos</div>
+            <p>Crea un nuevo cuaderno, toma una fotografía nítida de tus apuntes manuscritos y súbela en <strong>Añadir fuentes</strong> ➔ <strong>Subir archivos</strong>.</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">2</span> Configurar la herramienta Infografía en formato Vertical</div>
+            <p>En el panel derecho de <strong>Estudio</strong>, selecciona <strong>Infografía</strong> y ajusta: Orientación: <strong>Vertical</strong> | Idioma: <strong>Español</strong> | Estilo visual: <strong>Editorial</strong> (o <em>Sketch note</em>) | Nivel de detalle: <strong>Estándar</strong>.</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">3</span> Aplicar el Prompt Pasar Notas a Limpio y generar</div>
+            <p>Pega el <em>Prompt Pasar Notas a Limpio</em> (disponible en la pestaña PROMPTS) y pulsa <strong>Generar ahora</strong>.</p>
+            <div class="step-meta"><strong>Resultado esperado:</strong> Un documento gráfico en hoja tamaño A4 con fuente manuscrita de estudiante sobre papel con líneas, términos clave resaltados en neón amarillo, fechas en círculos rojos y pequeños dibujos explicativos a color.</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- CASO DE USO 5 -->
+      <div class="card card-highlight">
+        <span class="badge badge-emerald">Caso de Uso 5</span>
+        <h3>3.5. Arquitectura de Cursos Interactivos Modulares a partir de Documentos Complejos</h3>
+        <p><strong>3.5.1. Transformación de PDFs densos:</strong> Convierte monografías o manuales áridos en una experiencia de aprendizaje activo segmentada en 5 unidades pedagógicas autodirigidas.</p>
+
+        <h4>3.5.2 y 3.5.3. Procedimiento Paso a Paso y Activación de Recursos Interiores</h4>
+        <ul class="step-list">
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">1</span> Subir el PDF base al cuaderno temático</div>
+            <p>Crea un cuaderno temático (ejemplo: <code>CURSO_TERCIOS_FLANDES</code>) y sube el documento PDF base.</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">2</span> Editar el Informe Interactivo con el icono del lápiz</div>
+            <p>En el panel derecho de <strong>Estudio</strong>, localiza <strong>Informe</strong> y selecciona la modalidad <strong>Interactivo</strong>. <strong>Paso crítico:</strong> En lugar de pulsar directamente en generar, haz clic en el icono del <strong>lápiz de edición</strong> situado junto al botón de creación.</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">3</span> Introducir el Prompt de Curso Interactivo y generar la estructura</div>
+            <p>Pega el <em>Prompt Curso Interactivo</em> (ver pestaña PROMPTS) definiendo el rol docente, el público diana (ej. alumnos de 2º de ESO de 13-14 años o profesionales) y los 5 módulos. Pulsa en <strong>Generar ahora</strong>.</p>
+          </li>
+          <li class="step-item">
+            <div class="step-header"><span class="step-num">4</span> Activar manualmente los artefactos secundarios dentro de los 5 módulos</div>
+            <p>Abre el informe generado y activa los recursos que aparecen en estado de borrador pendiente:</p>
+            <ul>
+              <li><strong>Módulo 1 (Introducción):</strong> Pulsa el botón interior para generar el <strong>Glosario de términos clave</strong>.</li>
+              <li><strong>Módulo 2 o Módulo 3 (Mayor complejidad):</strong> Pulsa en generar la <strong>Presentación de diapositivas explicativa</strong> (y el mapa mental si el sistema lo propone).</li>
+              <li><strong>Módulo 4:</strong> Haz clic en generar la colección de <strong>Tarjetas didácticas (<em>flashcards</em>)</strong> interactivas (lote de 20 a 25 tarjetas).</li>
+              <li><strong>Módulo 5 (Resumen):</strong> Pulsa en generar el <strong>Examen interactivo</strong> (opción múltiple, pistas contextuales y cómputo final de aciertos).</li>
+            </ul>
+            <div class="step-meta"><strong>Resultado esperado:</strong> Al cerrar el panel de edición, el curso interactivo queda 100% operativo para el aprendizaje autónomo.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="tab-footer-nav">
+        <button type="button" class="nav-step-btn" data-goto="1">⬅ Anterior: CONCEPTOS</button>
+        <button type="button" class="nav-step-btn next-btn" data-goto="3">Siguiente: PRÁCTICA ➔</button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 3: PRÁCTICA Y PROYECTOS INTEGRADORES
+         ========================================== -->
+    <section class="tab-sec" id="sec-practica" data-t="PRÁCTICA">
+      <h2>5. Proyectos Integradores Multidisciplinares y Práctica Guiada</h2>
+      <p>Pon a prueba lo aprendido combinando múltiples flujos de trabajo en dos proyectos reales de extremo a extremo, acompañados de ejemplos correctos vs. incorrectos y una lista de comprobación interactiva.</p>
+
+      <!-- COMPARATIVA EJEMPLOS CORRECTOS VS INCORRECTOS -->
+      <div class="card card-highlight">
+        <h3>Comparativa Práctica: Ejemplos Incorrectos vs. Correctos</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Escenario Técnico</th>
+                <th>❌ Práctica Incorrecta (Fallo Común)</th>
+                <th>✅ Práctica Correcta (Estándar Maestro)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Descripción de personaje en viñeta de cómic</strong></td>
+                <td><code>"Leo parece asustado."</code> (Provoca que la IA dibuje un personaje distinto en cada panel).</td>
+                <td><code>"Leo (cabello negro desordenado, camiseta roja con estrella, pantalones cortos azules) parece asustado."</code></td>
+              </tr>
+              <tr>
+                <td><strong>Renderizado de Mapa Mental a Infografía</strong></td>
+                <td>Dejar marcadas las 10 fuentes PDF originales junto con la imagen del mapa mental descargado.</td>
+                <td>Desmarcar todos los PDFs y dejar marcada <strong>únicamente</strong> la imagen del mapa mental con todos sus nodos desplegados.</td>
+              </tr>
+              <tr>
+                <td><strong>Creación de Curso Interactivo en Estudio</strong></td>
+                <td>Pulsar directamente en "Generar Informe Interactivo" sin personalizar ni activar los botones internos de cada módulo.</td>
+                <td>Usar el <strong>icono del lápiz de edición</strong> con el prompt de 5 módulos y luego entrar al informe para generar glosario, presentación, flashcards y examen.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PROYECTO INTEGRADOR 1 -->
+      <div class="card">
+        <span class="badge badge-cyan">Proyecto Integrador 1</span>
+        <h3>5.1. Campaña de Divulgación Histórica Multimedia 360°</h3>
+        <p><strong>Objetivo:</strong> Diseñar una campaña de difusión sobre un periodo histórico complejo (por ejemplo, el Siglo de Oro o la Revolución Industrial) sin conocimientos previos de diseño gráfico ni programación.</p>
+        <ul>
+          <li><strong>Fase 1 (Recopilación):</strong> Subir como fuentes monografías en PDF y dos documentales de YouTube con transcripción activa.</li>
+          <li><strong>Fase 2 (Guionización):</strong> Activar el chat como Arquitecto de Novela Gráfica y generar un cómic de 6 páginas que narre la vida de un personaje anónimo de la época.</li>
+          <li><strong>Fase 3 (Renderizado Visual):</strong> Convertir la nota del guion en fuente y producir la presentación de cómic en 16:9 con estilo artístico editorial.</li>
+          <li><strong>Fase 4 (Prompts de Vídeo):</strong> Utilizar el Arquitecto de Prompts Multimedia para extraer 3 escenas de vídeo cinemático para Google Flow destinadas a redes sociales.</li>
+          <li><strong>Fase 5 (Evaluación):</strong> Configurar un informe interactivo con cuestionario de autoevaluación para los alumnos o lectores de la campaña.</li>
+        </ul>
+      </div>
+
+      <!-- PROYECTO INTEGRADOR 2 -->
+      <div class="card">
+        <span class="badge badge-emerald">Proyecto Integrador 2</span>
+        <h3>5.2. Sistema Autodidacta de Preparación de Oposiciones o Certificaciones Técnicas</h3>
+        <p><strong>Objetivo:</strong> Estudiar un temario denso de manera autónoma maximizando la retención mnemotécnica a largo plazo.</p>
+        <ul>
+          <li><strong>Fase 1 (Ingesta documental):</strong> Subir las leyes o manuales oficiales en PDF al cuaderno.</li>
+          <li><strong>Fase 2 (Estructuración interactiva):</strong> Crear un curso interactivo de 5 módulos mediante el prompt de rol docente con glosario terminológico y 25 tarjetas didácticas.</li>
+          <li><strong>Fase 3 (Síntesis de notas manuscritas):</strong> Digitalizar las notas tomadas en papel sucio convirtiéndolas en infografías verticales estructuradas con código de colores.</li>
+          <li><strong>Fase 4 (Mapas visuales):</strong> Generar mapas mentales de los temas más extensos, exportarlos como imagen y reinterpretarlos como infografías de síntesis editorial.</li>
+        </ul>
+      </div>
+
+      <!-- LISTA DE COMPROBACIÓN INTERACTIVA CON LOCALSTORAGE -->
+      <div class="card card-success">
+        <h3>Lista de Comprobación de Dominio Práctico (Progreso Guardado)</h3>
+        <p>Marca cada competencia a medida que la practiques. Tu avance se conserva automáticamente en tu dispositivo:</p>
+        <div id="checklist-container">
+          <label class="checklist-item"><input type="checkbox" data-check="c1"> <span>He creado un cuaderno con nomenclatura jerárquica clara y subido mis primeras fuentes verificadas.</span></label>
+          <label class="checklist-item"><input type="checkbox" data-check="c2"> <span>He configurado las Instrucciones del Chat desde el menú de tres puntos verticales del panel central.</span></label>
+          <label class="checklist-item"><input type="checkbox" data-check="c3"> <span>He guardado una respuesta del chat como nota y la he convertido en una fuente activa.</span></label>
+          <label class="checklist-item"><input type="checkbox" data-check="c4"> <span>He practicado el aislamiento de contexto desmarcando todas las fuentes salvo la que deseo renderizar.</span></label>
+          <label class="checklist-item"><input type="checkbox" data-check="c5"> <span>He desplegado todos los nodos de un mapa mental a pantalla completa antes de descargarlo como imagen.</span></label>
+          <label class="checklist-item"><input type="checkbox" data-check="c6"> <span>He utilizado el icono del lápiz de edición para personalizar un Informe Interactivo de 5 módulos y activado sus recursos interiores.</span></label>
+        </div>
+      </div>
+
+      <div class="tab-footer-nav">
+        <button type="button" class="nav-step-btn" data-goto="2">⬅ Anterior: PROCEDIMIENTO</button>
+        <button type="button" class="nav-step-btn next-btn" data-goto="4">Siguiente: PROMPTS ➔</button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 4: PROMPTS (REPOSITORIO COMPLETO)
+         ========================================== -->
+    <section class="tab-sec" id="sec-prompts" data-t="PROMPTS">
+      <h2>8. Repositorio Completo de Prompts Operativos</h2>
+      <p>Aquí tienes la totalidad de los prompts del manual listos para copiar con un solo clic, junto con la explicación exacta de dónde y cómo se emplea cada uno dentro de Gemini Notebook.</p>
+
+      <!-- 8.1 CÓMIC Y NOVELA GRÁFICA -->
+      <div class="card card-highlight">
+        <span class="badge badge-cyan">Categoría 8.1</span>
+        <h3>Prompts de Cómic y Novela Gráfica</h3>
+
+        <h4>1. Prompt de Sistema: Arquitecto de Novela Gráfica</h4>
+        <p><strong>Dónde se emplea:</strong> En el panel central de conversación ➔ Icono de los <strong>tres puntos verticales</strong> ➔ <strong>Configurar chat personalizado</strong>. Sirve para programar al asistente como guionista anti-amnesia y entrevistador paso a paso.</p>
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span class="code-block-title">Prompt de Sistema: Arquitecto de Novela Gráfica</span>
+            <button type="button" class="copy-btn" data-copy-target="prompt-comic-sys">📋 COPIAR PROMPT</button>
+          </div>
+          <pre class="prompt-pre" id="prompt-comic-sys">Rol y Objetivo Eres el Arquitecto de Novela Gráfica, un experto Guionista y Director Visual. Tu propósito es colaborar con el usuario para transformar un concepto en un guion de novela gráfica profesional y formateado. Tu capacidad única es estructurar guiones específicamente para ser traducidos en arte visual por generadores de imágenes de IA (Midjourney, DALL-E, etc.). Entiendes que los modelos de IA tienen "amnesia", por lo que aplicas rigurosamente la consistencia visual en tus descripciones.
+
+Fase 1: Descubrimiento Profundo (La Entrevista)
+No empieces a escribir el guion de inmediato. Primero debes establecer el "Lenguaje Visual". Haz una pregunta a la vez para no abrumar al usuario:
+- Concepto de la Historia: Trama central o lección (2-3 frases).
+- Audiencia Objetiva: ¿Quién lo lee? (Ej. Niños, Adultos, Formación Corporativa).
+- Extensión: Número de páginas (Recomienda 5-10).
+- El "Elenco" (Crucial): Pide detalles físicos específicos: peinado/color, ropa, accesorios, edad y etnia.
+- Selección de Estilo Artístico: Ofrece 3 recomendaciones basadas en la "vibra" de la historia o permite que elijan de tu base de datos (Manga, Noir, Fantasy, Ligne Claire, etc.).
+- Tono e Idioma: ¿Es divertido, serio, educativo? ¿En qué idioma será el diálogo?
+
+Fase 2: La Regla de la "Amnesia" (Reglas de Scripting)
+Los generadores de IA no recuerdan paneles anteriores.
+- Acción: DEBES volver a describir la apariencia física del personaje en cada uno de los prompts de panel.
+  Mal: "Leo parece asustado."
+  Bien: "Leo (cabello negro desordenado, camiseta roja con estrella, pantalones cortos azules) parece asustado."
+- Cambios de Estado: Si un personaje se ensucia o cambia de ropa, actualiza la descripción y repítela en todos los paneles siguientes.
+
+Fase 3: Formateo y Diseño
+Todos los diseños deben ser para un lienzo cinemático de 16:9.
+Usa términos específicos: Panorámica amplia, Pantalla dividida, Ángulo holandés, Primer plano, Vista de pájaro.
+
+Fase 4: Formato de Salida (Markdown)
+Debes generar el guion siguiendo estrictamente esta estructura:
+
+[PÁGINA DE PORTADA]
+Título: [Título]
+Descripción Visual: [Prompt detallado 16:9 estableciendo género y estilo].
+
+[PÁGINA X]
+Nota de Diseño: [Estructura de la página, ej. "3 paneles verticales"].
+Nota de Estilo: [Palabras clave del estilo elegido, ej. "Estilo Silver Age, puntos Ben-Day, líneas gruesas"].
+
+[VIÑETA X]
+Tipo de Toma y Ángulo: (Ej. Close-Up, Low Angle).
+Descripción Visual: [El Prompt de Imagen con descripción repetida del personaje].
+Iluminación/Atmósfera: (Ej. "Luz de neón cian", "Sol suave de mañana").
+Texto: Caption (Narrador), Diálogo ([Personaje]), y SFX (Efectos de sonido).</pre>
+        </div>
+
+        <h4>2. Prompt de Ejecución: Cómic Prompt para Presentación (Plantilla Parametrizable)</h4>
+        <p><strong>Dónde se emplea:</strong> En el <strong>Panel de Estudio (derecha)</strong> ➔ herramienta <strong>Presentación</strong> ➔ modalidad <strong>Presentación detallada</strong> (habiendo dejado marcada como única fuente la nota convertida del guion).</p>
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span class="code-block-title">Plantilla: Cómic Prompt para Presentación</span>
+            <button type="button" class="copy-btn" data-copy-target="prompt-comic-pres-tpl">📋 COPIAR PROMPT</button>
+          </div>
+          <pre class="prompt-pre" id="prompt-comic-pres-tpl">Crea esta historia como un comic con estilo [ESTILO CÓMIC] para un público [PUBLICO OBJETIVO]</pre>
+        </div>
+
+        <h4>3. Ejemplo Concreto de Cómic Prompt para Presentación (Estilo Noir Cinemático)</h4>
+        <p><strong>Dónde se emplea:</strong> En la caja de personalización de <strong>Panel de Estudio ➔ Presentación detallada</strong> para renderizar directamente el caso práctico juvenil con estética noir.</p>
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span class="code-block-title">Ejemplo listo: Presentación Cómic Noir</span>
+            <button type="button" class="copy-btn" data-copy-target="prompt-comic-pres-ex">📋 COPIAR PROMPT</button>
+          </div>
+          <pre class="prompt-pre" id="prompt-comic-pres-ex">Crea esta historia como un comic con estilo noir cinemático para un público juvenil</pre>
+        </div>
+      </div>
+
+      <!-- 8.2 MAPAS MENTALES VISUALES -->
+      <div class="card card-highlight">
+        <span class="badge badge-cyan">Categoría 8.2</span>
+        <h3>Prompt de Mapa Mental Visual</h3>
+        <p><strong>Dónde se emplea:</strong> En el <strong>Panel de Estudio (derecha)</strong> ➔ herramienta <strong>Infografía</strong> configurada en orientación <strong>Horizontal (16:9)</strong>, idioma <strong>Español</strong>, estilo <strong>Editorial</strong> y nivel <strong>Detallado</strong>, teniendo marcada como única fuente la imagen descargada del mapa mental desplegado.</p>
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span class="code-block-title">Prompt de Generación: Prompt Mapa Mental</span>
+            <button type="button" class="copy-btn" data-copy-target="prompt-mindmap">📋 COPIAR PROMPT</button>
+          </div>
+          <pre class="prompt-pre" id="prompt-mindmap">Crea un mapa mental detallado utilizando la Fuente (imagen). El resultado debe presentar nodos para encabezados y subencabezados, explicando brevemente las conexiones entre ellos. Asegúrate de que para cada nodo haya un elemento visual que ayude a comunicar el contenido de ese nodo en particular, así como una sola línea corta con una breve explicación. [16:9]</pre>
+        </div>
+      </div>
+
+      <!-- 8.3 FÁBRICA DE PROMPTS CINEMÁTICOS PARA VÍDEO CON IA -->
+      <div class="card card-highlight">
+        <span class="badge badge-purple">Categoría 8.3</span>
+        <h3>Prompts de Generación de Vídeo Cinemático (Veo 3.1, Omni 1.1 y Omni 1.2)</h3>
+
+        <h4>1. Prompt de Sistema: Protocolo de Configuración de Instrucciones de Chat</h4>
+        <p><strong>Dónde se emplea:</strong> En el panel central de chat ➔ <strong>Tres puntos verticales</strong> ➔ <strong>Configurar chat personalizado</strong> dentro del cuaderno que contiene las guías oficiales de Veo 3.1, Google Omni 1.1 y Google Omni 1.2.</p>
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span class="code-block-title">Protocolo Maestro: Arquitecto de Prompts Multimedia</span>
+            <button type="button" class="copy-btn" data-copy-target="prompt-video-sys">📋 COPIAR PROMPT</button>
+          </div>
+          <pre class="prompt-pre" id="prompt-video-sys"># PROTOCOLO DE CONFIGURACIÓN DE INSTRUCCIONES DE CHAT: ARQUITECTO DE PROMPTS MULTIMEDIA EN GEMINI NOTEBOOK (NOTEBOOKLM)
+
+Establece las siguientes directrices en el apartado de "Instrucciones del Chat" de este cuaderno de Gemini Notebook (NotebookLM). Este comando define tu perfil operativo y el marco de trabajo para consultar las fuentes cargadas en esta sesión y generar prompts optimizados exclusivamente para motores de video de última generación.
+
+##### I. PERFIL OPERATIVO Y DIAGNÓSTICO DE ENTRADA
+
+Tu función principal es actuar como el Arquitecto Especializado en Prompts Cinematográficos y de Video. Tu objetivo es procesar las necesidades del usuario y transformarlas en instrucciones técnicas impecables para generación de video, consultando y aplicando rigurosamente los manuales, reglas de sintaxis y especificaciones técnicas almacenadas en las fuentes de este cuaderno (con documentación vigente a 2026).
+
+###### Motores Compatibles y Cobertura:
+* Generación de Video: Veo 3.1, Google Omni 1.1, Google Omni 1.2.
+
+###### Fase de Diagnóstico y Verificación:
+Antes de formular cualquier propuesta, debes ejecutar este proceso:
+1. Validación documental (Retrieval): Contrasta activamente la petición del usuario con las fuentes cargadas en este cuaderno para aplicar las normativas y buenas prácticas exactas de cada modelo.
+2. Fase de Recopilación y Clarificación: Si la solicitud del usuario carece de parámetros clave, suspende temporalmente la creación y solicita de manera concisa:
+   * El motor de destino específico: (Veo 3.1, Google Omni 1.1, o Google Omni 1.2).
+   * El estilo visual o lenguaje cinemático deseado: (fotorrealismo, cinematografía analógica, iluminación, tipo de lente, encuadre, paleta de colores).
+   * Parámetros técnicos o restricciones: (relación de aspecto / aspect ratio, movimientos de cámara, duración de la secuencia, consistencia espacial y de personajes).
+
+##### II. ESPECIFICACIONES TÉCNICAS Y REGLAS DE SINTAXIS POR MODELO
+
+Aplica de forma estricta los criterios operativos extraídos de los documentos de este cuaderno para cada ecosistema:
+
+###### 1. Veo 3.1 (Video)
+* Lenguaje: Inglés cinemático de alta precisión descriptiva.
+* Sintaxis y Estructura: Diseñado para capturar texturas fotorrealistas complejas, iluminación volumétrica avanzada y consistencia temporal superior. Estructura el prompt integrando la física del entorno, la interacción de materiales y la fidelidad óptica del sensor simulado.
+* Movimientos de Cámara y Dinámica: Especifica transiciones fluidas de cámara y velocidad de obturación (ej. 35mm anamorphic lens, shallow depth of field, 24fps motion blur).
+* Control de Escena: Mantén una progresión lógica de la acción para evitar artefactos visuales en tomas de larga duración.
+
+###### 2. Google Omni 1.1 (Video)
+* Lenguaje: Inglés cinemático descriptivo y directo.
+* Estructura Cinemática Integrada: Combina en un flujo continuo y coherente el movimiento de cámara, la acción principal del sujeto y la evolución ambiental a lo largo del tiempo.
+* Comandos de Cámara: Utiliza terminología cinematográfica estructurada entre corchetes rectos o integrada de forma fluida (ej. [Cinematic Tracking Shot], [Slow Push-in], [Low-angle Pan]).
+* Optimización Temporal: Diseñado para una respuesta ágil en micro-narrativas y secuencias dinámicas de 4 a 8 segundos.
+
+###### 3. Google Omni 1.2 (Video)
+* Lenguaje: Inglés técnico/cinemático avanzado.
+* Sintaxis de Alta Densidad Cinemática: Optimizado para la comprensión semántica profunda de interacciones físicas complejas, iluminación ambiental dinámica y control estricto de la continuidad de personajes y objetos.
+* Estructura Recomendada: [Camera Movement] + [Subject & Precise Action] + [Dynamic Environment & Lighting] + [Technical Parameters & Aesthetic Profile].
+* Fidelidad y Coherencia: Especifica con claridad los puntos focales de la escena para aprovechar al máximo la consistencia espacial del motor en transiciones complejas.
+
+##### III. PROTOCOLO DE PRESENTACIÓN DE RESULTADOS
+
+En cada respuesta entregada en el chat, estructura la salida bajo el siguiente esquema formal:
+
+1. Ficha Técnica del Prompt:
+   * Modelo de Destino: [Veo 3.1 / Google Omni 1.1 / Google Omni 1.2]
+   * Tipo de Contenido: Video
+   * Estrategia Aplicada: [Resumen breve de las reglas de las fuentes utilizadas para este motor]
+
+2. Caja de Código Ejecutable: Presenta el prompt optimizado final dentro de un bloque de código limpio (```) para permitir una copia directa. (El prompt principal debe redactarse en inglés para maximizar la fidelidad del modelo, acompañado de una breve traducción de referencia en español).
+
+3. Parámetros Aconsejados y Justificación:
+   * Ajustes recomendados: Aspect Ratio (16:9, 9:16, etc.), resolución, fotogramas por segundo (FPS) o directrices de movimiento según aplique.
+   * Análisis de diseño: Ofrece una justificación técnica resumida (máximo 3 puntos clave) basada en las fuentes de este cuaderno que explique por qué se estructuró el prompt de esa manera para el motor seleccionado.</pre>
+        </div>
+
+        <h4>2. Prompt de Consulta de Ejemplo en el Chat</h4>
+        <p><strong>Dónde se emplea:</strong> Directamente en la <strong>caja de texto del chat central</strong> una vez guardado el protocolo anterior, para solicitar la generación de la ficha técnica y el prompt en inglés para Google Flow.</p>
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span class="code-block-title">Prompt de Consulta de Escena (Ejemplo años 70 en NY 2026)</span>
+            <button type="button" class="copy-btn" data-copy-target="prompt-video-query">📋 COPIAR PROMPT</button>
+          </div>
+          <pre class="prompt-pre" id="prompt-video-query">quiero un vídeo de 10 segundos para OVNI 12 personaje hombre de mediana edad vestido con un atuendo de los años 70 traje beige oscuro camisa abierta y gafas de sol acción el personaje corre por una calle de Nueva York actual de 2026 entra en un restaurante y pregunta con un tono de desesperación hablando en español de España "¿Pero qué en qué año estamos?" Y quiero un estilo cinematográfico</pre>
+        </div>
+      </div>
+
+      <!-- 8.4 DIGITALIZACIÓN DE APUNTES MANUSCRITOS -->
+      <div class="card card-highlight">
+        <span class="badge badge-amber">Categoría 8.4</span>
+        <h3>Prompt de Digitalización de Apuntes Manuscritos a Limpio</h3>
+        <p><strong>Dónde se emplea:</strong> En el <strong>Panel de Estudio (derecha)</strong> ➔ herramienta <strong>Infografía</strong> configurada en orientación <strong>Vertical</strong>, idioma <strong>Español</strong>, estilo <strong>Editorial</strong> y nivel de detalle <strong>Estándar</strong>, tras haber subido como fuente la fotografía de tus apuntes a mano.</p>
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span class="code-block-title">Prompt Pasar Notas a Limpio (Hoja A4 Escolar)</span>
+            <button type="button" class="copy-btn" data-copy-target="prompt-notes-clean">📋 COPIAR PROMPT</button>
+          </div>
+          <pre class="prompt-pre" id="prompt-notes-clean">Crea una nota de estudio escrita a mano en español del contenido de la fuente adjunta (imagen), con un estilo realista de cuaderno escolar.
+
+Si alguna definición o texto es demasiado escueto, puedes ampliarla.
+
+Utiliza una fuente de escritura a mano de estudiante, ligeramente imperfecta, sobre papel con líneas.
+
+Resalta los términos clave con un marcador neón amarillo para facilitar el repaso.
+
+Marca las fechas o datos importantes con círculos dibujados a mano en color rojo.
+
+Incluye pequeños garabatos y dibujos a color explicativos para ayudar a comprender los conceptos.
+
+Presenta todo en una hoja tamaño A4, con una composición clara, ordenada y aspecto auténtico de apuntes escolares.</pre>
+        </div>
+      </div>
+
+      <!-- 8.5 DISEÑO DE CURSOS INTERACTIVOS EDUCATIVOS -->
+      <div class="card card-highlight">
+        <span class="badge badge-emerald">Categoría 8.5</span>
+        <h3>Prompts de Cursos Interactivos (Estructura y Curso Completo con Presentación)</h3>
+
+        <h4>1. Prompt de Estructura de Curso</h4>
+        <p><strong>Dónde se emplea:</strong> En el <strong>Panel de Estudio (derecha)</strong> ➔ módulo <strong>Informe</strong> ➔ modalidad <strong>Interactivo</strong> ➔ pulsando sobre el <strong>icono del lápiz de edición</strong> situado junto al botón de creación.</p>
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span class="code-block-title">Prompt de Estructura de Curso Interactivo (5 Módulos)</span>
+            <button type="button" class="copy-btn" data-copy-target="prompt-course-base">📋 COPIAR PROMPT</button>
+          </div>
+          <pre class="prompt-pre" id="prompt-course-base">#Rol y Público objetivo: Actua como un experto profesor especializado en la creación de cursos interactivos y adapta el contenido que has de generar para [alumnos de 2º de ESO en España (13-14 años). Usa un lenguaje accesible, explicaciones claras y ejemplos cercanos a su día a día.]
+
+#Divide el tema en 5 módulos con los temas fundamentales. Empieza con un módulo de introducción y termina con un módulo de Resumen.
+
+#Inserta estos elementos, aparte de los que creas conveniente insertar:
+
+[Un glosario de términos en el módulo 1 de introducción]
+
+[Unas tarjetas didácticas en el Módulo con el contenido más complejo]
+
+[Un examen en el módulo 5 Resumen]
+
+Genera un curso interactivo muy visual.</pre>
+        </div>
+
+        <h4>2. Prompt Completo de Curso Interactivo (con Presentación Integrada)</h4>
+        <p><strong>Dónde se emplea:</strong> En el <strong>Panel de Estudio (derecha)</strong> ➔ <strong>Informe</strong> ➔ <strong>Interactivo</strong> ➔ <strong>Icono del lápiz de edición</strong> cuando deseas que el sistema incluya además una presentación de diapositivas en el módulo de mayor complejidad.</p>
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span class="code-block-title">Prompt Completo de Curso Interactivo (con Presentación)</span>
+            <button type="button" class="copy-btn" data-copy-target="prompt-course-full">📋 COPIAR PROMPT</button>
+          </div>
+          <pre class="prompt-pre" id="prompt-course-full">#Rol y Público objetivo: Actua como un experto profesor especializado en la creación de cursos interactivos y adapta el contenido que has de generar para [alumnos de 2º de ESO en España (13-14 años). Usa un lenguaje accesible, explicaciones claras y ejemplos cercanos a su día a día.]
+
+#Divide el tema en 5 módulos con los temas fundamentales. Empieza con un módulo de introducción y termina con un módulo de Resumen.
+
+#Inserta estos elementos, aparte de los que creas conveniente insertar:
+
+[Un glosario de términos en el módulo 1 de introducción]
+
+[Unas tarjetas didácticas en el Módulo con el contenido más complejo]
+
+[Genera una presentación del módulo que necesite una explicación más detallada]
+
+[Un examen en el módulo 5 Resumen]
+
+Genera un curso interactivo muy visual.</pre>
+        </div>
+      </div>
+
+      <div class="tab-footer-nav">
+        <button type="button" class="nav-step-btn" data-goto="3">⬅ Anterior: PRÁCTICA</button>
+        <button type="button" class="nav-step-btn next-btn" data-goto="5">Siguiente: 33 Preguntas (Q&amp;A) ➔</button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 5: 33 PREGUNTAS (Q&A)
+         ========================================== -->
+    <section class="tab-sec" id="sec-qa" data-t="33 Preguntas (Q&A)">
+      <h2>7. Evaluación y Banco de 33 Preguntas y Respuestas (Q&amp;A)</h2>
+      <p>Explora las 33 preguntas y respuestas oficiales ordenadas rigurosamente por nivel de dificultad: <strong>Nivel 1 (Básico)</strong>, <strong>Nivel 2 (Avanzado)</strong> y <strong>Nivel 3 (PRO)</strong>. Puedes desplegarlas todas o estudiarlas una por una.</p>
+
+      <div class="svg-controls">
+        <button type="button" class="tool-btn" id="btn-expand-all-qa">➕ Desplegar las 33 Preguntas</button>
+        <button type="button" class="tool-btn" id="btn-collapse-all-qa">➖ Contraer Todas</button>
+      </div>
+
+      <!-- NIVEL 1: BÁSICO (1 a 11) -->
+      <div class="card card-highlight">
+        <span class="badge badge-cyan">Nivel 1 — Básico (Preguntas 1 a 11)</span>
+        <h3>7.1. Nivel 1 (Básico): Fundamentos y Operativa Esencial</h3>
+
+        <details class="qa-item" open>
+          <summary>Pregunta 1: ¿Qué es Gemini Notebook y cuál es su principal ventaja frente a un chat tradicional de inteligencia artificial?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Es un entorno de trabajo cognitivo asistido por IA que opera sobre un principio de anclaje (<em>grounding</em>) estricto. Su ventaja radica en que solo responde en función de los documentos y fuentes cargados por el usuario, evitando alucinaciones y proporcionando citas exactas.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 2: ¿Cuáles son los tres paneles principales de la interfaz de usuario?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> El panel izquierdo de Fuentes (para gestionar los documentos), el panel central de Conversación (para el chat y las notas) y el panel derecho de Estudio (para generar artefactos multimedia).</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 3: ¿Qué tipos de archivos se pueden subir directamente como fuentes?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Documentos de Google (Docs, Sheets, Slides), archivos PDF, DOCX, TXT, Markdown, imágenes (PNG, JPG, WEBP), archivos de audio, direcciones web públicas y enlaces a vídeos de YouTube con transcripción.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 4: ¿Para qué sirve la casilla de verificación situada junto a cada fuente en el panel izquierdo?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Sirve para incluir o excluir esa fuente específica del contexto activo de consulta del chat y de las herramientas de generación del panel de Estudio.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 5: ¿Dónde se configuran las instrucciones de sistema para personalizar el comportamiento del chat?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> En el menú de los tres puntos verticales situado en la parte superior del panel central de conversación, seleccionando la opción "Configurar chat personalizado".</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 6: ¿Cómo se guarda una respuesta útil del chat para no perderla?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Pulsando el botón con el icono de chincheta/nota ("Guardar en una nota") ubicado en el pie de la respuesta generada.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 7: ¿Qué ocurre cuando conviertes una nota en fuente?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> La nota pasa a figurar en el panel izquierdo de fuentes como un documento de referencia más, permitiendo que el sistema genere presentaciones, infografías o informes basándose en su texto.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 8: ¿Qué es un mapa mental estándar en Gemini Notebook?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Es un esquema jerárquico de nodos de texto conectados que organiza visualmente las ideas clave de las fuentes de manera estructurada pero sobria.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 9: ¿Qué relación de aspecto tienen las presentaciones generadas en el panel de Estudio?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Tienen una relación de aspecto panorámica estándar de 16:9, ideal para pantallas de ordenador y proyectores.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 10: ¿Qué se necesita para generar una infografía vertical a partir de apuntes?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Una fotografía o captura clara de los apuntes manuscritos subida como fuente y la selección de la orientación vertical con el estilo editorial en la herramienta Infografía.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 11: ¿Qué sucede si le preguntas al chat algo que no está en tus fuentes?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> El sistema indicará honestamente que la información solicitada no figura en los documentos suministrados, preservando la fidelidad del anclaje y evitando inventar datos.</div>
+        </details>
+      </div>
+
+      <!-- NIVEL 2: AVANZADO (12 a 22) -->
+      <div class="card card-highlight">
+        <span class="badge badge-amber">Nivel 2 — Avanzado (Preguntas 12 a 22)</span>
+        <h3>7.2. Nivel 2 (Avanzado): Ingeniería de Flujos y Motores Multimedia</h3>
+
+        <details class="qa-item">
+          <summary>Pregunta 12: ¿En qué consiste la técnica de "aislamiento de contexto" al generar artefactos visuales?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Consiste en desmarcar todas las fuentes generales del cuaderno y dejar activada únicamente la fuente específica que se desea procesar (por ejemplo, el guion de un cómic o la imagen de un mapa mental), evitando que el motor mezcle conceptos ajenos.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 13: ¿Por qué los generadores de imágenes por IA sufren de "amnesia entre paneles" al crear cómics?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Porque no almacenan memoria visual ni estados de sesión persistentes entre llamadas independientes; cada viñeta se interpreta desde cero a menos que se repitan detalladamente los rasgos físicos y la ropa del personaje.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 14: ¿Cómo resuelve el prompt del "Arquitecto de Novela Gráfica" la falta de coherencia en los personajes?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Imponiendo la regla obligatoria de reinsertar la descripción física completa entre paréntesis (edad, peinado, ropa exacta, colores) en cada una de las descripciones visuales de cada viñeta.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 15: ¿Cuál es el procedimiento técnico para transformar un mapa mental simple en un mapa mental visual e interactivo?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Generar el mapa mental estándar, abrirlo a pantalla completa, desplegar todos sus nodos a la vez, descargarlo como imagen, resubir la imagen como fuente única y generar una infografía horizontal detallada con estilo editorial.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 16: ¿Qué función cumple el icono del lápiz de edición al crear un informe interactivo?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Permite sustituir la plantilla genérica del informe por un prompt pedagógico personalizado, definiendo el rol docente, el público objetivo y la estructura modular exacta antes del renderizado.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 17: ¿Por qué es necesario generar manualmente los recursos interiores en un curso interactivo?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Porque el sistema crea en primer lugar el armazón conceptual de los 5 módulos; los elementos secundarios (glosarios, presentaciones, flashcards y cuestionarios) se compilan bajo demanda dentro de cada módulo.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 18: ¿Cuáles son las diferencias principales entre los modelos Google Veo 3.1 y Google Omni 1.1 en generación de vídeo?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Veo 3.1 se orienta a texturas fotorrealistas de alta fidelidad, iluminación volumétrica y lentes cinematográficas en planos de mayor duración; Omni 1.1 está optimizado para microsecuencias dinámicas de 4 a 8 segundos con comandos de cámara ágiles.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 19: ¿Cómo organiza Google Omni 1.2 su sintaxis de alta densidad cinemática?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Mediante una estructura lineal estricta: <code>[Movimiento de cámara] + [Sujeto y acción precisa] + [Entorno dinámico e iluminación] + [Parámetros estéticos y técnicos]</code>.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 20: ¿Por qué el prompt de la factoría de vídeo debe entregar el resultado principal en inglés?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Porque los modelos de generación de vídeo (Veo y Omni) han sido entrenados predominantemente con descripciones y terminología cinematográfica en inglés, logrando una fidelidad semántica muy superior al español.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 21: ¿Qué elementos gráficos simula el prompt de pasar notas a limpio en una infografía?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Tipografía manuscrita imperfecta sobre papel pautado, conceptos clave resaltados con marcador neón amarillo, fechas importantes rodeadas con bolígrafo rojo y pequeños esquemas o garabatos explicativos a color en tamaño A4.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 22: ¿Cómo se evitan las mezclas de estilos en presentaciones generadas a partir de guiones técnicos?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Declarando las palabras clave de estilo (por ejemplo: "Silver Age, puntos Ben-Day, líneas gruesas" o "Noir cinemático") en la nota de diseño de la portada y en el prompt de ejecución de la presentación.</div>
+        </details>
+      </div>
+
+      <!-- NIVEL 3: PRO (23 a 33) -->
+      <div class="card card-highlight">
+        <span class="badge badge-purple">Nivel 3 — PRO (Preguntas 23 a 33)</span>
+        <h3>7.3. Nivel 3 (PRO): Arquitectura de Sistemas, Auditoría y Pipelines Complejos</h3>
+
+        <details class="qa-item">
+          <summary>Pregunta 23: ¿Cómo se puede diseñar un pipeline de automatización completo para convertir un libro técnico en un ecosistema de formación digital sin salir de Gemini Notebook?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> 1) Ingesta del PDF; 2) Informe interactivo modulado con lápiz de edición; 3) Generación de mapa mental exportado y reingresado como infografía de estudio; 4) Extracción de conceptos clave convertidos en notas y fuentes para presentaciones específicas; 5) Despliegue de flashcards y exámenes interactivos en cada unidad.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 24: ¿Qué técnica de ingeniería de prompts permite que Gemini Notebook actúe como un consultor técnico que entreviste al usuario antes de redactar?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> La fase de descubrimiento profundo (<em>deep discovery</em>) con instrucción explícita de "hacer una pregunta a la vez para no abrumar al usuario", suspendiendo la redacción final hasta completar los parámetros obligatorios.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 25: ¿Qué rol juegan las guías oficiales de sintaxis subidas como páginas web en la precisión de los prompts para Google Flow?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Actúan como base de datos técnica en tiempo real; el asistente contrasta la petición del usuario mediante búsqueda semántica contra las especificaciones vigentes del modelo, evitando usar parámetros obsoletos o no soportados.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 26: ¿Cómo se manejan los cambios de estado de un personaje (por ejemplo, ropa rota o rostro ensangrentado) a lo largo de un cómic en IA?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Se actualiza la descripción física del personaje en la viñeta exacta donde ocurre el evento y se propaga obligatoriamente esa nueva descripción modificada en todas las viñetas y páginas subsiguientes.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 27: ¿Qué parámetros ópticos avanzados se deben incluir en los prompts para Veo 3.1 para conseguir estética de cine analógico?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Tipo de lente (ej. <em>35mm anamorphic lens</em>), profundidad de campo reducida (<em>shallow depth of field</em>), desenfoque de movimiento natural (<em>24fps motion blur</em>), grano de película y especificación de iluminación volumétrica.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 28: Si un documento PDF contiene tablas comparativas complejas, ¿cuál es la mejor estrategia para que el chat las interprete sin errores?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Pedir en el chat una extracción estructurada en formato Markdown y guardarla como una nota independiente, convirtiendo esa nota en fuente limpia para aislarla de la complejidad del maquetado del PDF original.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 29: ¿Por qué es un error crítico dejar marcada la fuente de la biografía de Van Gogh al renderizar la infografía del mapa mental visual?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Porque el motor de infografía intentará resumir nuevamente todo el texto biográfico extenso en lugar de ceñirse a reorganizar y embellecer la estructura visual contenida en la imagen del mapa descargado.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 30: ¿Cómo se puede auditar si una respuesta del chat contiene información externa a las fuentes cargadas?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Verificando las citas numéricas entre corchetes asociadas a cada afirmación; si un párrafo carece de pasajes fuente vinculados o el sistema no puede resaltar el fragmento original en el panel izquierdo, esa afirmación procede de su entrenamiento general y debe ser depurada.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 31: ¿Qué limitaciones de hardware local soluciona la arquitectura en la nube de Gemini Notebook en comparación con herramientas locales como ComfyUI o SD WebUI?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Elimina la necesidad de contar con tarjetas gráficas de gama alta (GPU con 16GB+ VRAM), configuración de entornos Python locales, gestión de dependencias CUDA y consumo eléctrico intensivo, ya que todo el procesamiento se ejecuta en los centros de datos de Google.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 32: ¿Cómo influye la relación de aspecto [16:9] introducida en el prompt del mapa mental al generar la infografía?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Fuerza al modelo de diseño a componer los nodos sobre un lienzo panorámico equilibrado, evitando que los títulos se amontonen verticalmente y garantizando espacio para los iconos ilustrados por nodo.</div>
+        </details>
+
+        <details class="qa-item">
+          <summary>Pregunta 33: ¿Cuál es el protocolo de seguridad recomendado cuando se trabaja con materiales educativos destinados a menores de edad?</summary>
+          <div class="qa-body"><strong>Respuesta:</strong> Configurar en el chat personalizado directrices estrictas de tono pedagógico adaptado a la franja de edad (ej. 13-14 años), filtrar fuentes que puedan contener lenguaje o temáticas no aptas y revisar personalmente los cuestionarios generados antes de su distribución en el aula.</div>
+        </details>
+      </div>
+
+      <div class="tab-footer-nav">
+        <button type="button" class="nav-step-btn" data-goto="4">⬅ Anterior: PROMPTS</button>
+        <button type="button" class="nav-step-btn next-btn" data-goto="6">Siguiente: ERRORES ➔</button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 6: ERRORES, SEGURIDAD Y LIMITACIONES
+         ========================================== -->
+    <section class="tab-sec" id="sec-errores" data-t="ERRORES">
+      <h2>4. Buenas Prácticas, Seguridad, Limitaciones y Solución de Problemas</h2>
+
+      <div class="card card-warn">
+        <h3>4.3. Diagnóstico y Resolución de Errores Frecuentes</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Problema o Error Detectado</th>
+                <th>Causa Principal</th>
+                <th>Solución Técnica Paso a Paso</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>La IA mezcla información de varios temas en una infografía o cómic.</strong></td>
+                <td>Múltiples fuentes marcadas simultáneamente en el panel izquierdo.</td>
+                <td>Desmarcar todas las fuentes y dejar marcada con casilla de verificación <strong>únicamente</strong> la fuente específica que se desea renderizar.</td>
+              </tr>
+              <tr>
+                <td><strong>El chat responde de forma genérica y olvida su rol de especialista.</strong></td>
+                <td>Las instrucciones de sistema no se guardaron en la sección adecuada.</td>
+                <td>Ir a los <strong>tres puntos</strong> del chat central, acceder a <strong>Configurar chat personalizado</strong>, pegar el prompt de sistema y pulsar <strong>Guardar</strong>.</td>
+              </tr>
+              <tr>
+                <td><strong>La infografía del mapa mental aparece borrosa o con texto ilegible.</strong></td>
+                <td>El mapa mental nativo se descargó con nodos contraídos o en baja resolución.</td>
+                <td>Abrir el mapa nativo a <strong>pantalla completa</strong>, pulsar en <strong>desplegar todos los nodos a la vez</strong> y verificar la descarga antes de subirla.</td>
+              </tr>
+              <tr>
+                <td><strong>El examen del curso interactivo aparece vacío o no evaluable.</strong></td>
+                <td>No se activó la generación de recursos interiores tras crear la estructura troncal.</td>
+                <td>Entrar dentro del informe generado, abrir el Módulo 5 y pulsar el botón <strong>Añadir / Generar examen</strong>.</td>
+              </tr>
+              <tr>
+                <td><strong>El modelo generador de vídeo externo deforma al personaje en la escena.</strong></td>
+                <td>El prompt omitió la descripción física completa o el tipo de plano óptico.</td>
+                <td>Volver a Gemini Notebook y solicitar la reformulación del prompt especificando lente de 35mm, plano medio y ropa detallada.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>4.1. Buenas Prácticas en la Gestión y Curación de Fuentes Documentales</h3>
+        <ul>
+          <li><strong>Calidad sobre cantidad:</strong> Cargar 50 documentos redundantes ralentiza la búsqueda semántica y aumenta el ruido. Selecciona las fuentes más rigurosas y exhaustivas.</li>
+          <li><strong>Nomenclatura homogénea:</strong> Renombra tus archivos PDF o DOCX antes de subirlos para que sus títulos describan exactamente su contenido.</li>
+          <li><strong>Modularidad en cuadernos:</strong> No mezcles temas dispares en un mismo cuaderno. Mantén cuadernos temáticos independientes para garantizar respuestas hiperenfocadas.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>4.2. Privacidad de Datos, Límites Éticos y Directrices de Seguridad</h3>
+        <ul>
+          <li><strong>Tratamiento de información confidencial:</strong> No subas datos sensibles de clientes, contraseñas o datos bancarios a fuentes públicas o compartidas.</li>
+          <li><strong>Políticas de contenido seguro:</strong> La plataforma bloquea automáticamente peticiones o documentos vinculados a actividades ilícitas, contenido sexualmente explícito o material dañino.</li>
+          <li><strong>Atribución y derechos de autor:</strong> Respeta las licencias de uso de los materiales educativos y fuentes web que incorpores a tus cuadernos.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>4.4. Limitaciones Técnicas Inherentes</h3>
+        <ul>
+          <li><strong>Independencia de renderizado:</strong> Gemini Notebook estructura y diseña los prompts y la narrativa visual, pero la renderización final de vídeos hiperrealistas depende de suites externas como Google Flow / Veo.</li>
+          <li><strong>Memoria por sesión:</strong> Si se reinicia o borra un cuaderno, los artefactos no guardados localmente se perderán. Siempre exporta tus informes o presentaciones finales.</li>
+        </ul>
+      </div>
+
+      <div class="tab-footer-nav">
+        <button type="button" class="nav-step-btn" data-goto="5">⬅ Anterior: 33 Preguntas (Q&amp;A)</button>
+        <button type="button" class="nav-step-btn next-btn" data-goto="7">Siguiente: RESUMEN ➔</button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 7: RESUMEN Y GLOSARIO TÉCNICO
+         ========================================== -->
+    <section class="tab-sec" id="sec-resumen" data-t="RESUMEN">
+      <h2>6. Resumen Ejecutivo por Capítulo y Glosario Técnico Terminológico</h2>
+
+      <div class="card card-highlight">
+        <h3>Síntesis de Flujos Clave de Gemini Notebook</h3>
+        <ul>
+          <li><strong>Anclaje y 3 Paneles:</strong> El panel izquierdo controla qué fuentes entran en juego; el central dirige la conversación mediante instrucciones de sistema; el derecho (Estudio) produce los artefactos.</li>
+          <li><strong>Ciclo Nota ➔ Fuente + Aislamiento:</strong> Guardar una respuesta del chat como nota, convertirla en fuente y desmarcar el resto de archivos es la llave maestra para controlar al 100% las presentaciones e infografías.</li>
+          <li><strong>Los 5 Flujos Maestros:</strong> 1) Cómics 16:9 sin amnesia visual; 2) Mapas mentales desplegados y convertidos en infografías editoriales; 3) Prompts cinemáticos en inglés para Veo 3.1 y Omni 1.1/1.2 en Google Flow; 4) Apuntes manuscritos pasados a limpio en hoja A4 vertical; 5) Cursos interactivos de 5 módulos con glosario, presentación, flashcards y examen.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>6. Glosario Técnico Terminológico Completo</h3>
+        <ul>
+          <li><strong>Anclaje (<em>Grounding</em>):</strong> Técnica mediante la cual un modelo de inteligencia artificial fundamenta sus respuestas exclusivamente en un corpus documental determinado, citando las fuentes que respaldan cada dato.</li>
+          <li><strong>Amnesia de la IA:</strong> Incapacidad de los motores generativos de imágenes para recordar la identidad y apariencia visual de los sujetos de un fotograma a otro sin una re-especificación explícita de sus rasgos.</li>
+          <li><strong>Artefacto:</strong> Cualquier producto digital estructurado (presentación, infografía, audio, vídeo resumen, informe o cuestionario) generado en el panel de Estudio de Gemini Notebook.</li>
+          <li><strong>Ficha Técnica de Prompt:</strong> Documento de metadatos que describe el modelo de destino, la estrategia de cámara, la lente óptica y la iluminación de una instrucción cinemática.</li>
+          <li><strong>Google Flow:</strong> Suite de generación y renderizado de vídeo e imagen por inteligencia artificial desarrollada por Google que integra motores como Veo y Omni.</li>
+          <li><strong>Google Omni (1.1 / 1.2 / Flash):</strong> Familia de modelos multimodales de última generación optimizados para la comprensión semántica y generación de secuencias de vídeo cinemáticas de alta consistencia temporal.</li>
+          <li><strong>Google Veo 3.1:</strong> Modelo generativo de vídeo de alta gama cinemática enfocado en el fotorrealismo óptico, física de materiales e iluminación volumétrica.</li>
+          <li><strong>Infografía Editorial:</strong> Modalidad de diseño gráfico dentro de Gemini Notebook que organiza la información visual con maquetación tipográfica cuidada, jerarquía de titulares y elementos ilustrados por bloques.</li>
+          <li><strong>Instrucción de Sistema (<em>System Prompt</em>):</strong> Directriz de configuración permanente que define la identidad, restricciones operativas y formato de salida del asistente en el chat.</li>
+          <li><strong>Panel de Estudio (<em>Studio</em>):</strong> Columna derecha de Gemini Notebook donde residen las herramientas de producción de contenidos multimedia estructurados.</li>
+          <li><strong>Tarjeta Didáctica (<em>Flashcard</em>):</strong> Recurso pedagógico de memorización activa basado en el sistema de pregunta en el anverso y respuesta explicativa en el reverso.</li>
+          <li><strong>Visión Multimodal:</strong> Capacidad de la inteligencia artificial para interpretar, transcribir y analizar de forma conjunta datos textuales, esquemas gráficos y fotografías del mundo real.</li>
+        </ul>
+      </div>
+
+      <div class="tab-footer-nav">
+        <button type="button" class="nav-step-btn" data-goto="6">⬅ Anterior: ERRORES</button>
+        <button type="button" class="nav-step-btn next-btn" data-goto="8">Siguiente: FUENTES ➔</button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 8: FUENTES FIABLES Y ENLACES
+         ========================================== -->
+    <section class="tab-sec" id="sec-fuentes" data-t="FUENTES">
+      <h2>9. Fuentes Fiables, Repositorios y Enlaces Oficiales</h2>
+      <p>A continuación se registran los enlaces directos y recursos documentales oficiales y de apoyo que respaldan técnicamente este manual. Cada URL dispone de su botón para copiar y su botón para abrir el enlace en una nueva ventana:</p>
+
+      <!-- ENLACE 1 -->
+      <div class="card card-highlight">
+        <h3>1. Documento Maestro de Prompts y Directrices Técnicas</h3>
+        <p><strong>Descripción:</strong> Repositorio oficial en línea con las instrucciones de sistema, protocolos de entrevista y comandos de renderizado para los 5 casos de uso.</p>
+        <div class="url-card">
+          <span class="url-text" id="url-doc-prompts">https://docs.google.com/document/u/0/d/19UvRJIy4b29XLX4LxgtcbCSDOFB_Mug_/mobilebasic</span>
+          <div class="url-actions">
+            <a href="https://docs.google.com/document/u/0/d/19UvRJIy4b29XLX4LxgtcbCSDOFB_Mug_/mobilebasic" target="_blank" rel="noopener noreferrer" class="open-url-btn" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">🔗 Abrir enlace en nueva ventana</a>
+            <button type="button" class="copy-btn" data-copy-target="url-doc-prompts">📋 COPIAR URL</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENLACE 2 -->
+      <div class="card card-highlight">
+        <h3>2. Sesión Audiovisual y Videotutorial de Referencia</h3>
+        <p><strong>Canal:</strong> Joaquín Barberá - Inteligencia Artificial.<br>
+        <strong>Descripción:</strong> Demostración práctica en vídeo de cada uno de los flujos de trabajo, configuraciones de pantalla y resultados visuales (<em>5 cosas BESTIALES que puedes hacer con GEMINI NOTEBOOK</em>).</p>
+        <div class="url-card">
+          <span class="url-text" id="url-yt-video">https://youtube.com/watch?v=RZQrQ_Gef4A&amp;is=ot9rqdyTkVi6p_yy</span>
+          <div class="url-actions">
+            <a href="https://youtube.com/watch?v=RZQrQ_Gef4A&is=ot9rqdyTkVi6p_yy" target="_blank" rel="noopener noreferrer" class="open-url-btn" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">🔗 Abrir enlace en nueva ventana</a>
+            <button type="button" class="copy-btn" data-copy-target="url-yt-video">📋 COPIAR URL</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENLACE 3 -->
+      <div class="card card-highlight">
+        <h3>3. Plataformas Oficiales y Motores de Generación Mencionados</h3>
+        <p><strong>Entorno de Trabajo Gemini Notebook (Google NotebookLM):</strong> Plataforma de análisis documental y generación multimedia con anclaje de fuentes de Google.</p>
+        <div class="url-card">
+          <span class="url-text" id="url-notebooklm">https://notebooklm.google.com</span>
+          <div class="url-actions">
+            <a href="https://notebooklm.google.com" target="_blank" rel="noopener noreferrer" class="open-url-btn" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">🔗 Abrir enlace en nueva ventana</a>
+            <button type="button" class="copy-btn" data-copy-target="url-notebooklm">📋 COPIAR URL</button>
+          </div>
+        </div>
+        <ul>
+          <li><strong>Suite de Generación de Vídeo Google Flow:</strong> Entorno oficial de Google para la ejecución de prompts cinemáticos en modelos Veo 3.1, Omni 1.1 y Omni Flash 1.2.</li>
+          <li><strong>Documentación Oficial de Inteligencia Artificial de Google:</strong> Portal de recursos técnicos sobre arquitectura de modelos multimodales y especificaciones de prompts de vídeo y visión artificial.</li>
+        </ul>
+      </div>
+
+      <div class="tab-footer-nav">
+        <button type="button" class="nav-step-btn" data-goto="7">⬅ Anterior: RESUMEN</button>
+        <button type="button" class="nav-step-btn next-btn" data-goto="9">Siguiente: CRÉDITOS ➔</button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         PESTAÑA 9: CRÉDITOS (ORDEN ESTRICTO OBLIGATORIO)
+         ========================================== -->
+    <section class="tab-sec" id="sec-creditos" data-t="CRÉDITOS">
+      <!-- 1. Título de la sección -->
+      <h2>CRÉDITOS</h2>
+
+      <!-- 2. SVG animado compartido con INICIO -->
+      <div class="svg-hero-wrapper" id="svg-mount-creditos" role="img" aria-label="Ilustración animada compartida del ecosistema Gemini Notebook y su motor de anclaje documental"></div>
+
+      <!-- 3. Breve descripción de la ilustración -->
+      <div class="card">
+        <p><strong>Descripción de la ilustración:</strong> Representación vectorial animada multicapa en proporción 4:5 del motor de anclaje documental (<em>Grounding Engine</em>) de Gemini Notebook y sus tres paneles operativos (Fuentes, Chat y Estudio), irradiando flujos sinápticos de datos hacia los cinco casos de uso avanzados: Factoría de Cómic 16:9, Mapas Mentales Visuales, Vídeo Cinemático con Veo 3.1 y Google Omni, Restauración de Notas Manuscritas en A4 y Cursos Interactivos Modulares.</p>
+      </div>
+
+      <!-- 4. Nombre del autor (elemento visual más destacado) y 5. Texto «Autor del tutorial» -->
+      <div class="credits-author-box">
+        <div class="credits-author-name">Rubén Sbarsky</div>
+        <div class="credits-author-role">Autor del tutorial</div>
+      </div>
+
+      <!-- 6. Información adicional pertinente y Fecha/Hora Fija -->
+      <div class="card card-highlight">
+        <h3>Información Técnica de Edición y Sincronización</h3>
+        <p><strong>Obra:</strong> Manual Maestro de Usos Avanzados de Gemini Notebook: Guía Integral Paso a Paso para el Aprendizaje Autónomo y Autodidacta.</p>
+        <p><strong>Arquitectura y Estándar:</strong> Desarrollado bajo metodología adversarial <em>GAUNTLET</em> y estándares de ingeniería de software <em>Clean Code (v2.0)</em>, optimizado para visualización móvil desde 360px (Samsung Galaxy A02s) y exportación editorial A4.</p>
+        <p><strong>Fecha y hora de creación (Texto fijo sincronizado):</strong> <code>10/11/2026 — 21:08:44</code></p>
+        <!-- 7. Número de versión -->
+        <p><strong>Número de versión:</strong> <span class="badge badge-cyan">V001</span> (Archivo: <code>tutorial_usos_avanzados_gemini_notebook_V001.html</code>)</p>
+      </div>
+
+      <div class="tab-footer-nav">
+        <button type="button" class="nav-step-btn" data-goto="8">⬅ Anterior: FUENTES</button>
+        <button type="button" class="nav-step-btn next-btn" data-goto="0">Volver a INICIO 🏠</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTONES FLOTANTES ARRASTRABLES (INICIO Y ARRIBA) -->
+  <button type="button" id="fab-home" class="draggable-fab" aria-label="Ir a la pestaña de Inicio" title="Arrastra para mover o pulsa para ir a INICIO">🏠 INICIO</button>
+  <button type="button" id="fab-top" class="draggable-fab" aria-label="Subir al comienzo de la pestaña actual" title="Arrastra para mover o pulsa para ir ARRIBA">⬆ ARRIBA</button>
+
+  <!-- NOTIFICACIÓN TOAST -->
+  <div id="toast-notification" role="status" aria-live="polite">Copiado al portapapeles</div>
+
+  <!-- LÓGICA JAVASCRIPT LIMPIA Y MODULAR (CLEAN CODE) -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* =========================================================
+         1. ESTADO Y SELECCIÓN DE ELEMENTOS DEL DOM
+         ========================================================= */
+      const secs = Array.from(document.querySelectorAll('.tab-sec'));
+      const tabButtons = Array.from(document.querySelectorAll('.nav-tab-btn'));
+      const dr = document.querySelector('#dr');
+      const mb = document.querySelector('#mb');
+      const homeIndexBtn = document.querySelector('#ix');
+      const toastEl = document.querySelector('#toast-notification');
+
+      let currentTabIndex = 0;
+      let isSvgPaused = false;
+      let svgMasterTemplate = '';
+
+      /* =========================================================
+         2. ALMACENAMIENTO SEGURO (LOCALSTORAGE CON FALLBACK)
+         ========================================================= */
+      function getSavedItem(key, fallbackValue) {
+        try {
+          const val = window.localStorage.getItem(key);
+          return val !== null ? val : fallbackValue;
+        } catch (err) {
+          return fallbackValue;
+        }
+      }
+
+      function setSavedItem(key, value) {
+        try {
+          window.localStorage.setItem(key, value);
+        } catch (err) {
+          // Entorno restringido sin localStorage: fallo silencioso controlado
+        }
+      }
+
+      function showToast(message) {
+        if (!toastEl) return;
+        toastEl.textContent = message;
+        toastEl.classList.add('show');
+        window.clearTimeout(toastEl._timer);
+        toastEl._timer = window.setTimeout(() => {
+          toastEl.classList.remove('show');
+        }, 2400);
+      }
+
+      /* =========================================================
+         3. GESTIÓN DE LA PLANTILLA ÚNICA SVG Y FALLBACK DATA:URI
+         ========================================================= */
+      function initializeSvgTemplate() {
+        const sourceContainer = document.getElementById('svg-master-source');
+        if (sourceContainer) {
+          svgMasterTemplate = sourceContainer.innerHTML.trim();
+          sourceContainer.remove();
+        }
+      }
+
+      function buildUniqueSvgMarkup(instanceSuffix) {
+        return svgMasterTemplate.replace(/__UID__/g, '_' + instanceSuffix);
+      }
+
+      function applyDataUriFallback(container, instanceSuffix) {
+        const rawSvg = buildUniqueSvgMarkup(instanceSuffix);
+        const encoded = 'data:image/svg+xml;utf8,' + encodeURIComponent(rawSvg);
+        container.innerHTML = '<img src="' + encoded + '" alt="Ilustración de la arquitectura Gemini Notebook" style="width:100%;height:100%;object-fit:contain;" />';
+      }
+
+      function mountSvgIntoContainer(containerId, instanceSuffix) {
+        const container = document.getElementById(containerId);
+        if (!container || !svgMasterTemplate) return;
+
+        try {
+          container.innerHTML = buildUniqueSvgMarkup(instanceSuffix);
+          const svgEl = container.querySelector('svg');
+          if (!svgEl) {
+            applyDataUriFallback(container, instanceSuffix);
+            return;
+          }
+          container.classList.toggle('svg-paused', isSvgPaused);
+        } catch (err) {
+          applyDataUriFallback(container, instanceSuffix);
+        }
+      }
+
+      function mountActiveTabSvgs() {
+        if (currentTabIndex === 0) {
+          mountSvgIntoContainer('svg-mount-home', 'home');
+        } else if (currentTabIndex === 9) {
+          mountSvgIntoContainer('svg-mount-creditos', 'creditos');
+        }
+      }
+
+      function mountAllSvgsForPrint() {
+        mountSvgIntoContainer('svg-mount-home', 'home');
+        mountSvgIntoContainer('svg-mount-creditos', 'creditos');
+      }
+
+      function verifyVisibleSvgIntegrity() {
+        if (currentTabIndex === 0) {
+          const homeMount = document.getElementById('svg-mount-home');
+          if (homeMount && !homeMount.querySelector('svg') && !homeMount.querySelector('img')) {
+            mountSvgIntoContainer('svg-mount-home', 'home');
+          }
+        } else if (currentTabIndex === 9) {
+          const credMount = document.getElementById('svg-mount-creditos');
+          if (credMount && !credMount.querySelector('svg') && !credMount.querySelector('img')) {
+            mountSvgIntoContainer('svg-mount-creditos', 'creditos');
+          }
+        }
+      }
+
+      /* =========================================================
+         4. NAVEGACIÓN SPA Y PANEL LATERAL ☰ ÍNDICE
+         ========================================================= */
+      const tg = v => {
+        dr.classList.toggle('o', v);
+        mb.setAttribute('aria-expanded', dr.classList.contains('o'));
+      };
+
+      function scrollToTopOfCurrentTab() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+
+      function go(index) {
+        const targetIndex = Math.max(0, Math.min(secs.length - 1, Number(index) || 0));
+        currentTabIndex = targetIndex;
+
+        secs.forEach((sec, idx) => {
+          sec.classList.toggle('active', idx === targetIndex);
+        });
+
+        tabButtons.forEach((btn, idx) => {
+          btn.classList.toggle('active', idx === targetIndex);
+          if (idx === targetIndex) {
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        });
+
+        [...dr.children].forEach((a, j) => a.classList.toggle('on', j == targetIndex));
+
+        mountActiveTabSvgs();
+        scrollToTopOfCurrentTab();
+        setSavedItem('gn_active_tab_v001', String(targetIndex));
+        updateReadingProgress();
+      }
+
+      function buildLateralIndex() {
+        secs.forEach((s, i) => {
+          const a = document.createElement('a');
+          a.textContent = (i ? i + '. ' : '') + (s.dataset.t || s.querySelector('h2').textContent);
+          a.setAttribute('tabindex', '0');
+          a.onclick = () => {
+            go(i);
+            tg(false);
+          };
+          a.onkeydown = e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              go(i);
+              tg(false);
+            }
+          };
+          dr.appendChild(a);
+        });
+      }
+
+      /* =========================================================
+         5. BOTONES FLOTANTES MÓVILES ARRASTRABLES (INICIO Y ARRIBA)
+         ========================================================= */
+      function makeButtonDraggable(buttonElement, onClickAction, storageKey) {
+        if (!buttonElement) return;
+
+        let isDragging = false;
+        let hasMoved = false;
+        let startX = 0;
+        let startY = 0;
+        let initialLeft = 0;
+        let initialTop = 0;
+
+        const savedPos = getSavedItem(storageKey, '');
+        if (savedPos) {
+          try {
+            const parsed = JSON.parse(savedPos);
+            if (typeof parsed.left === 'number' && typeof parsed.top === 'number') {
+              buttonElement.style.left = Math.min(window.innerWidth - 105, Math.max(6, parsed.left)) + 'px';
+              buttonElement.style.top = Math.min(window.innerHeight - 54, Math.max(64, parsed.top)) + 'px';
+              buttonElement.style.right = 'auto';
+              buttonElement.style.bottom = 'auto';
+            }
+          } catch (e) {
+            // Ignorar posición corrupta
+          }
+        }
+
+        buttonElement.addEventListener('pointerdown', e => {
+          isDragging = true;
+          hasMoved = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          const rect = buttonElement.getBoundingClientRect();
+          initialLeft = rect.left;
+          initialTop = rect.top;
+          buttonElement.setPointerCapture(e.pointerId);
+        });
+
+        buttonElement.addEventListener('pointermove', e => {
+          if (!isDragging) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+            hasMoved = true;
+          }
+          if (hasMoved) {
+            const maxLeft = window.innerWidth - buttonElement.offsetWidth - 6;
+            const maxTop = window.innerHeight - buttonElement.offsetHeight - 6;
+            const newLeft = Math.min(maxLeft, Math.max(6, initialLeft + dx));
+            const newTop = Math.min(maxTop, Math.max(62, initialTop + dy));
+            buttonElement.style.left = newLeft + 'px';
+            buttonElement.style.top = newTop + 'px';
+            buttonElement.style.right = 'auto';
+            buttonElement.style.bottom = 'auto';
+          }
+        });
+
+        buttonElement.addEventListener('pointerup', e => {
+          if (!isDragging) return;
+          isDragging = false;
+          buttonElement.releasePointerCapture(e.pointerId);
+          if (hasMoved) {
+            const rect = buttonElement.getBoundingClientRect();
+            setSavedItem(storageKey, JSON.stringify({ left: rect.left, top: rect.top }));
+          } else {
+            onClickAction();
+          }
+        });
+      }
+
+      /* =========================================================
+         6. COPIA AL PORTAPAPELES ROBUSTA CON FALLBACK
+         ========================================================= */
+      function copyTextContent(targetId, buttonEl) {
+        const targetEl = document.getElementById(targetId);
+        if (!targetEl) return;
+        const rawText = targetEl.textContent;
+
+        const confirmSuccess = () => {
+          const orig = buttonEl.textContent;
+          buttonEl.textContent = '✅ ¡COPIADO!';
+          showToast('Contenido copiado íntegramente al portapapeles');
+          window.setTimeout(() => {
+            buttonEl.textContent = orig;
+          }, 2000);
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(rawText).then(confirmSuccess).catch(() => {
+            fallbackCopyText(rawText, confirmSuccess);
+          });
+        } else {
+          fallbackCopyText(rawText, confirmSuccess);
+        }
+      }
+
+      function fallbackCopyText(text, onSuccess) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (ok) {
+            onSuccess();
+          } else {
+            showToast('Selecciona el texto manualmente y pulsa Ctrl+C');
+          }
+        } catch (err) {
+          showToast('Selecciona el texto manualmente y pulsa Ctrl+C');
+        }
+      }
+
+      /* =========================================================
+         7. BUSCADOR INTERNO MULTIPESTAÑA
+         ========================================================= */
+      function handleGlobalSearch(query) {
+        const resultsPanel = document.getElementById('search-results-panel');
+        if (!resultsPanel) return;
+
+        const cleanQuery = query.trim().toLowerCase();
+        if (cleanQuery.length < 2) {
+          resultsPanel.style.display = 'none';
+          resultsPanel.innerHTML = '';
+          return;
+        }
+
+        const hits = [];
+        secs.forEach((sec, secIdx) => {
+          const tabName = sec.dataset.t || 'Sección ' + secIdx;
+          const blocks = sec.querySelectorAll('h2, h3, h4, p, li, summary, .qa-body, pre');
+          blocks.forEach(block => {
+            const text = block.textContent || '';
+            if (text.toLowerCase().includes(cleanQuery)) {
+              hits.push({
+                secIdx,
+                tabName,
+                snippet: text.trim().substring(0, 145) + (text.length > 145 ? '...' : ''),
+                element: block
+              });
+            }
+          });
+        });
+
+        resultsPanel.style.display = 'block';
+        if (hits.length === 0) {
+          resultsPanel.innerHTML = '<p style="margin:0;color:var(--text-secondary);">No se encontraron coincidencias para "<strong>' + cleanQuery.replace(/[<>&"]/g, '') + '</strong>".</p>';
+          return;
+        }
+
+        const topHits = hits.slice(0, 10);
+        resultsPanel.innerHTML = '<div style="font-weight:700;margin-bottom:8px;color:var(--accent-cyan);">Resultados encontrados (' + hits.length + '): pulsa para ir a la sección</div>';
+        topHits.forEach(hit => {
+          const item = document.createElement('div');
+          item.className = 'search-hit';
+          item.innerHTML = '<span class="badge badge-cyan">' + hit.tabName + '</span> <span style="font-size:0.88rem;">' + hit.snippet.replace(/[<>&]/g, '') + '</span>';
+          item.onclick = () => {
+            resultsPanel.style.display = 'none';
+            go(hit.secIdx);
+            const detailsParent = hit.element.closest('details');
+            if (detailsParent) detailsParent.open = true;
+            window.setTimeout(() => {
+              hit.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 150);
+          };
+          resultsPanel.appendChild(item);
+        });
+      }
+
+      /* =========================================================
+         8. IMPRESIÓN Y GUARDADO EN PDF A4 CON RESTAURACIÓN DE ESTADO
+         ========================================================= */
+      let closedDetailsBeforePrint = [];
+
+      function prepareDocumentForPrint() {
+        mountAllSvgsForPrint();
+        closedDetailsBeforePrint = [];
+        document.querySelectorAll('details.qa-item').forEach(det => {
+          if (!det.open) {
+            closedDetailsBeforePrint.push(det);
+            det.open = true;
+          }
+        });
+      }
+
+      function restoreDocumentAfterPrint() {
+        closedDetailsBeforePrint.forEach(det => {
+          det.open = false;
+        });
+        closedDetailsBeforePrint = [];
+      }
+
+      function triggerPrintPdf() {
+        try {
+          prepareDocumentForPrint();
+          window.print();
+          window.setTimeout(restoreDocumentAfterPrint, 800);
+        } catch (err) {
+          restoreDocumentAfterPrint();
+          alert('Abre este archivo directamente en el navegador y utiliza Ctrl+P o Cmd+P');
+        }
+      }
+
+      /* =========================================================
+         9. PROGRESO DE LECTURA, TAMAÑO DE FUENTE, TEMA Y CHECKLIST
+         ========================================================= */
+      function updateReadingProgress() {
+        const bar = document.getElementById('reading-progress-bar');
+        if (!bar) return;
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const pct = docHeight > 0 ? Math.min(100, Math.max(0, (scrollTop / docHeight) * 100)) : 100;
+        bar.style.width = pct + '%';
+      }
+
+      function setupPreferencesAndChecklist() {
+        let fontScale = parseFloat(getSavedItem('gn_font_scale_v001', '1')) || 1;
+        document.documentElement.style.setProperty('--font-scale', String(fontScale));
+
+        document.getElementById('btn-font-dec').onclick = () => {
+          fontScale = Math.max(0.85, +(fontScale - 0.08).toFixed(2));
+          document.documentElement.style.setProperty('--font-scale', String(fontScale));
+          setSavedItem('gn_font_scale_v001', String(fontScale));
+        };
+
+        document.getElementById('btn-font-inc').onclick = () => {
+          fontScale = Math.min(1.35, +(fontScale + 0.08).toFixed(2));
+          document.documentElement.style.setProperty('--font-scale', String(fontScale));
+          setSavedItem('gn_font_scale_v001', String(fontScale));
+        };
+
+        const savedTheme = getSavedItem('gn_theme_v001', 'dark');
+        if (savedTheme === 'light') {
+          document.body.classList.add('light-theme');
+        }
+
+        document.getElementById('btn-theme-toggle').onclick = () => {
+          const isLight = document.body.classList.toggle('light-theme');
+          setSavedItem('gn_theme_v001', isLight ? 'light' : 'dark');
+        };
+
+        document.querySelectorAll('#checklist-container input[type="checkbox"]').forEach(cb => {
+          const key = 'gn_chk_' + cb.dataset.check;
+          const isChecked = getSavedItem(key, '0') === '1';
+          cb.checked = isChecked;
+          cb.closest('.checklist-item').classList.toggle('completed', isChecked);
+
+          cb.addEventListener('change', () => {
+            setSavedItem(key, cb.checked ? '1' : '0');
+            cb.closest('.checklist-item').classList.toggle('completed', cb.checked);
+          });
+        });
+      }
+
+      /* =========================================================
+         10. INICIALIZACIÓN Y EVENTOS GLOBALES
+         ========================================================= */
+      function initTutorial() {
+        initializeSvgTemplate();
+        buildLateralIndex();
+        setupPreferencesAndChecklist();
+
+        mb.onclick = () => tg();
+        if (homeIndexBtn) {
+          homeIndexBtn.onclick = () => tg(true);
+        }
+
+        window.addEventListener('keydown', e => {
+          if (e.key === 'Escape') tg(false);
+        });
+
+        document.addEventListener('click', e => {
+          if (!e.target.closest('#dr,#mb,#ix')) tg(false);
+        });
+
+        tabButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            go(Number(btn.dataset.tab));
+          });
+        });
+
+        document.querySelectorAll('[data-goto]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            go(Number(btn.dataset.goto));
+          });
+        });
+
+        document.querySelectorAll('[data-copy-target]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            copyTextContent(btn.dataset.copyTarget, btn);
+          });
+        });
+
+        const toggleSvgBtn = document.getElementById('btn-toggle-svg-anim');
+        if (toggleSvgBtn) {
+          toggleSvgBtn.onclick = () => {
+            isSvgPaused = !isSvgPaused;
+            document.querySelectorAll('.svg-hero-wrapper').forEach(w => {
+              w.classList.toggle('svg-paused', isSvgPaused);
+            });
+            toggleSvgBtn.textContent = isSvgPaused ? '▶️ Reanudar Animación' : '⏸️ Pausar/Reanudar Animación';
+          };
+        }
+
+        const expandQaBtn = document.getElementById('btn-expand-all-qa');
+        const collapseQaBtn = document.getElementById('btn-collapse-all-qa');
+        if (expandQaBtn && collapseQaBtn) {
+          expandQaBtn.onclick = () => {
+            document.querySelectorAll('details.qa-item').forEach(d => { d.open = true; });
+          };
+          collapseQaBtn.onclick = () => {
+            document.querySelectorAll('details.qa-item').forEach(d => { d.open = false; });
+          };
+        }
+
+        const searchInput = document.getElementById('global-search');
+        if (searchInput) {
+          searchInput.addEventListener('input', e => handleGlobalSearch(e.target.value));
+        }
+
+        const printBtn = document.getElementById('btn-print-pdf');
+        if (printBtn) {
+          printBtn.onclick = triggerPrintPdf;
+        }
+
+        window.addEventListener('beforeprint', prepareDocumentForPrint);
+        window.addEventListener('afterprint', restoreDocumentAfterPrint);
+        window.addEventListener('scroll', updateReadingProgress, { passive: true });
+
+        makeButtonDraggable(
+          document.getElementById('fab-home'),
+          () => go(0),
+          'gn_fab_home_pos_v001'
+        );
+
+        makeButtonDraggable(
+          document.getElementById('fab-top'),
+          () => scrollToTopOfCurrentTab(),
+          'gn_fab_top_pos_v001'
+        );
+
+        const initialTab = parseInt(getSavedItem('gn_active_tab_v001', '0'), 10);
+        go(isNaN(initialTab) ? 0 : initialTab);
+
+        window.setInterval(verifyVisibleSvgIntegrity, 2500);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTutorial);
+      } else {
+        initTutorial();
+      }
+    })();
+  </script>
+</body>
+</html>
